@@ -18,6 +18,7 @@ export interface CalendarFields {
   services?: any[];
   storeItems?: any[];
   totalAmount?: number;
+  eventCompleted?: boolean;
 }
 
 function parseHoursFromText(txt?: string): number {
@@ -42,27 +43,65 @@ function computeDurationHours(f: CalendarFields): number {
   return dur > 0 ? dur : 1; // mínimo 1h
 }
 
+function formatBRL(n: number) { return `R$ ${n.toFixed(2)}`; }
+function timeHHmm(d: Date) { return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+
 export function buildDescricao(f: CalendarFields, valorPacote: number, totalComDeslocamento: number): string {
   const inicio = new Date(f.inicioISO);
+  // Totales por líneas
+  const servicesRows = (f.services || []).map((it: any) => {
+    const qty = Number(it.quantity ?? 1);
+    const price = parseMoney(it.price);
+    const total = price * qty;
+    const name = it.name || it.id || '���';
+    return { name, qty, price, total };
+  });
+  const storeRows = (f.storeItems || []).map((it: any) => {
+    const qty = Number(it.quantity ?? 1);
+    const price = parseMoney(it.price);
+    const total = price * qty;
+    const name = it.name || '—';
+    return { name, qty, price, total };
+  });
+  const travel = Number(f.deslocamento || 0);
+  const servicesTotal = servicesRows.reduce((s, r) => s + r.total, 0);
+  const storeTotal = storeRows.reduce((s, r) => s + r.total, 0);
+  const total = servicesTotal + storeTotal + travel;
+
+  // Remaining (A pagar) con misma lógica de contratos
+  const servicesEffective = servicesTotal + travel;
+  const deposit = Math.ceil(servicesEffective * 0.2 + storeTotal * 0.5);
+  const remaining = Math.max(0, total - deposit);
+
+  const header = [
+    f.nome || 'cliente',
+    inicio.toISOString().slice(0,10),
+    timeHHmm(inicio),
+    formatBRL(total),
+    formatBRL(remaining),
+    f.eventCompleted ? 'Completado' : ''
+  ].filter(Boolean).join(' ');
+
+  const info = [
+    f.telefone || '',
+    f.endereco || '',
+    f.tipoEvento || ''
+  ].filter(Boolean).join('\n');
+
+  const tableHeader = 'Serviços\nItem\tCant.\tPrecio\tTotal';
+  const serviceLines = servicesRows.map(r => `${r.name}\t${r.qty}\t${formatBRL(r.price)}\t${formatBRL(r.total)}`).join('\n');
+  const storeLines = storeRows.map(r => `${r.name}\t${r.qty}\t${formatBRL(r.price)}\t${formatBRL(r.total)}`).join('\n');
+  const travelLine = travel > 0 ? `Deslocamento\t1\t${formatBRL(travel)}\t${formatBRL(travel)}` : '';
+  const totalLine = `Total: ${formatBRL(total)}`;
+
   const linhas = [
-    `📆 Formulário enviado: ${new Date().toLocaleString()}`,
-    f.email && `📩 Email: ${f.email}`,
-    f.nome && `👤 Nome completo: ${f.nome}`,
-    f.telefone && `📞 Telefone: ${f.telefone}`,
-    `🗓️ Início: ${inicio.toLocaleString()}`,
-    f.endereco && `📍 Localização: ${f.endereco}`,
-    (f.deslocamento ?? 0) ? `🚗 Deslocamento: R$${Number(f.deslocamento).toFixed(2)}` : '',
-    f.tipoEvento && `📸 Tipo de evento: ${f.tipoEvento}`,
-    f.pacote && `📦 Pacote contratado: ${f.pacote}`,
-    f.figurino && `🤰 Figurino: ${f.figurino}`,
-    f.pacoteFoto && `🖼️ Foto: ${f.pacoteFoto}`,
-    f.pacoteVideo && `🎥 Vídeo: ${f.pacoteVideo}`,
-    f.pacoteFotoVideo && `📸+🎥 Foto + Vídeo: ${f.pacoteFotoVideo}`,
-    f.formaPagamento && `💳 Forma de pagamento: ${f.formaPagamento}`,
-    f.instagram && `📱 Instagram: ${f.instagram}`,
-    (typeof f.respostaConsentimento !== 'undefined') && `${String(f.respostaConsentimento).toLowerCase().includes('sim') || f.respostaConsentimento === true ? '✅' : '❌'} Consentimento: ${f.respostaConsentimento}`,
-    valorPacote > 0 ? `💵 Valor do pacote: R$${valorPacote.toFixed(2)}` : '',
-    `💰 Total com deslocamento: R$${totalComDeslocamento.toFixed(2)}`
+    header,
+    info,
+    tableHeader,
+    serviceLines,
+    storeLines,
+    travelLine,
+    totalLine
   ].filter(Boolean).join('\n');
   return linhas;
 }

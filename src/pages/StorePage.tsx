@@ -260,6 +260,9 @@ const StorePage = () => {
             {adminView === 'orders' && (
               <OrdersManagement />
             )}
+            {adminView === 'contracts' && (
+              <ContractsManagement />
+            )}
           </div>
         )}
 

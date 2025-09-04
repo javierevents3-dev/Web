@@ -47,7 +47,10 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
   };
 
   const proceedFinalize = async () => {
-    if (!contractRef.current || !isSignatureComplete) return;
+    if (!contractRef.current || !isSignatureComplete) {
+      alert('Assine o contrato antes de confirmar para gerar o PDF.');
+      return;
+    }
 
     window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     setIsGeneratingPDF(true);
@@ -83,13 +86,14 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
       // Update contract with PDF URL
       await updateContractStatus(contractId, { pdfUrl: downloadUrl } as any);
 
-      // Trigger download for the user
+      // Trigger download for the user (programmatic and fallback)
       const link = document.createElement('a');
       link.href = downloadUrl;
       link.download = `contrato-wild-pictures-studio-${data.name.toLowerCase().replace(/\s+/g, '-')}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      try { window.open(downloadUrl, '_blank'); } catch (_) {}
 
       setShowSuccessModal(true);
     } catch (error) {
@@ -288,7 +292,7 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
               {/* Cláusula 6 */}
               <section>
                 <h3 className="text-lg font-medium text-primary mb-4 pb-2 border-b border-secondary">
-                  CLÁUSULA 6ª ��� DA CLÁUSULA PENAL
+                  CLÁUSULA 6ª ����� DA CLÁUSULA PENAL
                 </h3>
                 <div className="space-y-3 text-sm text-gray-700">
                   <p>6.1. O descumprimento, por qualquer das partes, das obrigações assumidas neste contrato, sujeitará a parte infratora ao pagamento de multa equivalente a 1/3 (um terço) do valor total do contrato, sem prejuízo de eventuais perdas e danos.</p>

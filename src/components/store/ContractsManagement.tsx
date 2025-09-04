@@ -94,11 +94,11 @@ const ContractsManagement = () => {
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="grid grid-cols-12 p-3 text-xs font-medium border-b">
           <div className="col-span-1" />
-          <div className="col-span-3"><User size={14} title="Cliente" /></div>
-          <div className="col-span-2"><Mail size={14} title="Email" /></div>
-          <div className="col-span-2"><Calendar size={14} title="Fecha" /></div>
-          <div className="col-span-1"><DollarSign size={14} title="Total" /></div>
-          <div className="col-span-2"><CheckCircle size={14} title="Estatus" /></div>
+          <div className="col-span-3"><User size={14} title="Nombre" /></div>
+          <div className="col-span-3"><Calendar size={14} title="Fecha de evento" /></div>
+          <div className="col-span-1"><Clock size={14} title="Hora" /></div>
+          <div className="col-span-2"><DollarSign size={14} title="Valor total" /></div>
+          <div className="col-span-1"><DollarSign size={14} title="A pagar" /></div>
           <div className="col-span-1 text-right"><Settings size={14} title="Acciones" /></div>
         </div>
         {loading && <div className="p-4 text-sm text-gray-500">Cargando...</div>}

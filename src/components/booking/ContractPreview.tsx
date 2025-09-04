@@ -554,7 +554,7 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
                    <div className="border-t border-gray-300 pt-4">
                     <div className="flex justify-between items-center">
                       <span className="text-xl font-medium text-primary">VALOR TOTAL:</span>
-                      <span className="text-2xl font-bold text-red-600">
+                      <span className="text-2xl font-bold text-green-600">
                       R$ {total.toFixed(2).replace('.', ',')}
                       </span>
                     </div>

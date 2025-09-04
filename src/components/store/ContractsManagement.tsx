@@ -59,13 +59,32 @@ const ContractsManagement = () => {
   useEffect(() => { fetchContracts(); }, []);
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return contracts;
-    const s = search.toLowerCase();
-    return contracts.filter(c =>
-      (c.clientName || '').toLowerCase().includes(s) ||
-      (c.clientEmail || '').toLowerCase().includes(s) ||
-      (c.eventType || '').toLowerCase().includes(s)
-    );
+    const list = (() => {
+      if (!search.trim()) return contracts;
+      const s = search.toLowerCase();
+      return contracts.filter(c =>
+        (c.clientName || '').toLowerCase().includes(s) ||
+        (c.clientEmail || '').toLowerCase().includes(s) ||
+        (c.eventType || '').toLowerCase().includes(s)
+      );
+    })();
+
+    const now = new Date().getTime();
+    const mapped = list.map(c => {
+      const ev = c.eventDate ? new Date(c.eventDate) : undefined;
+      const t = ev && !isNaN(ev.getTime()) ? ev.getTime() : new Date(c.contractDate || c.createdAt || Date.now()).getTime();
+      const diff = Math.abs(t - now);
+      return { c, diff };
+    });
+
+    mapped.sort((a, b) => {
+      const ap = a.c.eventCompleted ? 1 : 0;
+      const bp = b.c.eventCompleted ? 1 : 0;
+      if (ap !== bp) return ap - bp;
+      return a.diff - b.diff;
+    });
+
+    return mapped.map(m => m.c);
   }, [contracts, search]);
 
   const toggleFlag = async (id: string, field: keyof ContractItem) => {

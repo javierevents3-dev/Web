@@ -135,15 +135,22 @@ const ContractsManagement = () => {
               <div className="col-span-1 text-sm">{(c as any).eventTime || '-'}</div>
               <div className="col-span-2 font-semibold">R$ {Number(c.totalAmount || 0).toFixed(2)}</div>
               <div className="col-span-1 font-semibold">R$ {(() => {
-                const servicesSum = Array.isArray(c.services) ? c.services.reduce((sum, it: any) => {
-                  const p = Number(String(it.price || '').replace(/[^0-9]/g, '')) / 100;
-                  const q = Number(it.quantity || 1);
-                  return sum + p * q;
-                }, 0) : 0;
-                const storeSum = Array.isArray(c.storeItems) ? c.storeItems.reduce((sum, it: any) => sum + (Number(it.price || 0) * Number(it.quantity || 1)), 0) : 0;
-                const travel = Number(c.travelFee || 0);
+                const form = (c as any).formSnapshot || {};
+                const servicesEffective = Array.isArray(c.services)
+                  ? c.services.reduce((sum, it: any, idx: number) => {
+                      const price = Number(String(it.price || '').replace(/[^0-9]/g, ''));
+                      const qty = Number(it.quantity || 1);
+                      const coupon = form[`discountCoupon_${idx}`];
+                      const isFree = coupon === 'FREE' && it.id && String(it.id).includes('prewedding') && !String(it.id).includes('teaser');
+                      if (isFree) return sum;
+                      return sum + price * qty;
+                    }, 0) + Number(c.travelFee || 0)
+                  : Number(c.travelFee || 0);
+                const storeItemsTotal = Array.isArray(c.storeItems)
+                  ? c.storeItems.reduce((sum, it: any) => sum + (Number(it.price || 0) * Number(it.quantity || 1)), 0)
+                  : 0;
                 const total = Number(c.totalAmount || 0);
-                const deposit = servicesSum > 0 ? Math.ceil((servicesSum + travel) * 0.2 + storeSum * 0.5) : Math.ceil(total * 0.5);
+                const deposit = Math.ceil(servicesEffective * 0.2 + storeItemsTotal * 0.5);
                 return Math.max(0, total - deposit).toFixed(2);
               })()}</div>
               <div className="col-span-1 text-right">
@@ -187,8 +194,8 @@ const ContractsManagement = () => {
                                 <tr key={idx} className="border-t">
                                   <td className="py-1">{it.name || it.id || '—'}</td>
                                   <td className="py-1">{qty}</td>
-                                  <td className="py-1">R$ {(price/100).toFixed(2)}</td>
-                                  <td className="py-1">R$ {(total/100).toFixed(2)}</td>
+                                  <td className="py-1">R$ {price.toFixed(2)}</td>
+                                  <td className="py-1">R$ {total.toFixed(2)}</td>
                                 </tr>
                               );
                             })}

@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { db } from '../../utils/firebaseClient';
 import { collection, deleteDoc, doc, getDocs, orderBy, query, updateDoc } from 'firebase/firestore';
 import { ChevronDown, ChevronUp, CheckCircle, Clock, FileText, Loader, Mail, MapPin, Phone, Settings, Trash2, User, DollarSign, Link as LinkIcon, Calendar, Pencil } from 'lucide-react';
-import { reserveOnCalendar } from '../../utils/googleCalendar';
+import { reserveOnCalendar, buildCalendarEvent } from '../../utils/googleCalendar';
+import type { CalendarFields } from '../../utils/googleCalendar';
 
 interface ContractItem {
   id: string;
@@ -31,6 +32,7 @@ const ContractsManagement = () => {
   const [search, setSearch] = useState('');
   const [editing, setEditing] = useState<ContractItem | null>(null);
   const [editForm, setEditForm] = useState<any>({});
+  const [reservePreview, setReservePreview] = useState<null | { fields: CalendarFields; event: any }>(null);
 
   const fetchContracts = async () => {
     setLoading(true);
@@ -233,7 +235,7 @@ const ContractsManagement = () => {
                               const d = new Date(iso);
                               return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
                             })();
-                            const fields = {
+                            const fields: CalendarFields = {
                               email: c.clientEmail,
                               nome: c.clientName,
                               telefone: form.phone || form.telefone || '',
@@ -250,12 +252,10 @@ const ContractsManagement = () => {
                               respostaConsentimento: form.acceptTerms ?? form.agreeTerms ?? '',
                               inicioISO
                             };
-                            const result = await reserveOnCalendar(fields, { calendarId: 'primary' });
-                            const message = result.event?.description || 'Reserva preparada';
-                            console.log('[Reserva]', message);
-                            alert('Reserva generada y registrada en consola.');
+                            const event = buildCalendarEvent(fields);
+                            setReservePreview({ fields, event });
                           } catch (e:any) {
-                            console.error('Error reservando en Google Calendar', e);
+                            console.error('Error preparando la reserva', e);
                             alert('Error al preparar la reserva. Revisa consola.');
                           }
                         }}
@@ -390,6 +390,59 @@ const ContractsManagement = () => {
           <div className="mt-4 flex justify-end gap-2">
             <button onClick={() => setEditing(null)} className="border-2 border-black text-black px-3 py-2 rounded-none hover:bg-black hover:text-white">Cancelar</button>
             <button onClick={saveEdit} className="border-2 border-black bg-black text-white px-3 py-2 rounded-none hover:opacity-90">Guardar</button>
+          </div>
+        </div>
+      </div>
+    )}
+    {reservePreview && (
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl border border-gray-200 w-full max-w-2xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-medium">Confirmar Reserva</h3>
+            <button onClick={() => setReservePreview(null)} className="text-gray-500 hover:text-gray-900">✕</button>
+          </div>
+
+          <div className="space-y-3 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <div className="text-xs text-gray-600">Título</div>
+                <div className="font-medium">{reservePreview.event.summary}</div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-600">Localización</div>
+                <div className="font-medium break-all">{reservePreview.event.location || '—'}</div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-600">Inicio</div>
+                <div className="font-medium">{new Date(reservePreview.event.start.dateTime).toLocaleString()}</div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-600">Fin</div>
+                <div className="font-medium">{new Date(reservePreview.event.end.dateTime).toLocaleString()}</div>
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-600 mb-1">Descripción</div>
+              <pre className="whitespace-pre-wrap text-xs bg-gray-50 p-2 rounded border">{reservePreview.event.description}</pre>
+            </div>
+          </div>
+
+          <div className="mt-4 flex justify-end gap-2">
+            <button onClick={() => setReservePreview(null)} className="border-2 border-black text-black px-3 py-2 rounded-none hover:bg-black hover:text-white">Cancelar</button>
+            <button
+              onClick={async () => {
+                try {
+                  const result = await reserveOnCalendar(reservePreview.fields, { calendarId: 'primary' });
+                  console.log('[Reserva]', result);
+                  alert('Reserva generada y registrada en consola.');
+                  setReservePreview(null);
+                } catch (e:any) {
+                  console.error('Error reservando en Google Calendar', e);
+                  alert('Error al reservar. Revisa consola.');
+                }
+              }}
+              className="border-2 border-black bg-black text-white px-3 py-2 rounded-none hover:opacity-90"
+            >Confirmar</button>
           </div>
         </div>
       </div>

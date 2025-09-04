@@ -12,7 +12,7 @@ import { maternityPackages } from '../data/maternityData';
 type BookingStep = 'contract' | 'form' | 'preview' | 'complete';
 
 const BookingPage = () => {
-  const { items: cartItems, clearCart, addToCart } = useCart();
+  const { items: cartItems, clearCart, addToCart, setIsCartOpen } = useCart();
   const [currentStep, setCurrentStep] = useState<BookingStep>('contract');
   const [showStorePopup, setShowStorePopup] = useState(false);
   const [storePopupSeen, setStorePopupSeen] = useState(false);
@@ -77,6 +77,17 @@ const BookingPage = () => {
       setShowStorePopup(true);
     }
   }, [currentStep, cartItems, storePopupSeen]);
+
+  // Close cart drawer on contract step if cart contains both services and store items
+  useEffect(() => {
+    if (currentStep === 'contract') {
+      const hasServices = (formData.cartItems?.length || 0) > 0;
+      const hasStore = (formData.storeItems?.length || 0) > 0;
+      if (hasServices && hasStore) {
+        setIsCartOpen(false);
+      }
+    }
+  }, [currentStep, formData.cartItems, formData.storeItems]);
 
   const handleContractAccept = () => {
     console.log('📋 Contract accepted, moving to form');

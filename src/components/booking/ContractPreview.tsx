@@ -106,31 +106,29 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
   };
 
   const calculateTotal = () => {
-    if (!data.cartItems || data.cartItems.length === 0) return { subtotal: 0, couponDiscount: 0, paymentDiscount: 0, total: 0 };
-    
-    // Calculate items total considering coupon discounts
-    const itemsTotal = data.cartItems.reduce((sum, item, index) => {
+    // Calculate items total considering coupon discounts (handles empty services)
+    const itemsTotal = (data.cartItems || []).reduce((sum, item, index) => {
       const itemPrice = Number(item.price.replace(/[^0-9]/g, ''));
       const itemTotal = itemPrice * item.quantity;
       const coupon = data[`discountCoupon_${index}`];
-      
+
       // Apply item-specific discount for FREE coupon on prewedding items (excluding teaser)
       if (coupon === 'FREE' && item.id && item.id.includes('prewedding') && !item.id.includes('teaser')) {
         return sum; // FREE coupon makes the item free (0 cost)
       }
-      
+
       return sum + itemTotal;
     }, 0);
-    
+
     // Add store items to total
-    const storeItemsTotal = data.storeItems?.reduce((sum, item) => {
-      return sum + (item.price * item.quantity);
-    }, 0) || 0;
-    
-    const subtotal = itemsTotal + storeItemsTotal + data.travelCost;
-    
+    const storeItemsTotal = (data.storeItems || []).reduce((sum, item) => {
+      return sum + (Number(item.price) * Number(item.quantity));
+    }, 0);
+
+    const subtotal = itemsTotal + storeItemsTotal + (data.travelCost || 0);
+
     // Calculate coupon discounts for display
-    const couponDiscount = data.cartItems.reduce((sum, item, index) => {
+    const couponDiscount = (data.cartItems || []).reduce((sum, item, index) => {
       const coupon = data[`discountCoupon_${index}`];
       if (coupon === 'FREE' && item.id && item.id.includes('prewedding') && !item.id.includes('teaser')) {
         const itemPrice = Number(item.price.replace(/[^0-9]/g, ''));
@@ -138,16 +136,16 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
       }
       return sum;
     }, 0);
-    
+
     // Calculate original subtotal for payment discount calculation
-    const originalSubtotal = data.cartItems.reduce((sum, item) => {
+    const originalSubtotal = (data.cartItems || []).reduce((sum, item) => {
       const itemPrice = Number(item.price.replace(/[^0-9]/g, ''));
       return sum + (itemPrice * item.quantity);
-    }, 0) + storeItemsTotal + data.travelCost;
-    
+    }, 0) + storeItemsTotal + (data.travelCost || 0);
+
     const paymentDiscount = data.paymentMethod === 'cash' ? originalSubtotal * 0.05 : 0;
     const total = subtotal - paymentDiscount;
-    
+
     return {
       subtotal,
       couponDiscount,
@@ -158,6 +156,14 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
 
   const calculatePayments = () => {
     const { total } = calculateTotal();
+
+    const isStoreOnly = (!(data.cartItems && data.cartItems.length) && (data.storeItems && data.storeItems.length));
+
+    if (isStoreOnly) {
+      const deposit = Math.ceil(total * 0.5);
+      const remaining = Math.max(0, total - deposit);
+      return { deposit, remaining, storeOnly: true as const };
+    }
 
     // Calculate effective totals: services (with coupons) + travel, and store items
     const servicesEffective = (data.cartItems || []).reduce((sum, item, index) => {
@@ -174,11 +180,12 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
 
     const deposit = Math.ceil(servicesEffective * 0.2 + storeItemsTotal * 0.5);
     const remaining = Math.max(0, total - deposit);
-    return { deposit, remaining };
+    return { deposit, remaining, storeOnly: false as const };
   };
 
   const { subtotal, couponDiscount, paymentDiscount, total } = calculateTotal();
-  const { deposit, remaining } = calculatePayments();
+  const payments = calculatePayments();
+  const { deposit, remaining } = payments;
 
   const selectedDresses = data.selectedDresses?.map(dressId => 
     dressOptions.find(dress => dress.id === dressId)
@@ -326,67 +333,69 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
                 </div>
               </div>
 
-              {/* Service Object */}
-              <div className="mb-8">
-                <h3 className="text-lg font-medium text-primary mb-4 pb-2 border-b border-secondary">
-                  OBJETO DO CONTRATO
-                </h3>
-                {data.cartItems && data.cartItems.length > 0 ? (
-                  <div className="space-y-6">
-                    {data.cartItems.map((item, index) => (
-                      <div key={`service-${index}`} className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                        <h4 className="text-lg font-medium text-primary mb-4">
-                          Serviço #{index + 1}: {item.name}
-                        </h4>
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                            <div className="flex items-center">
-                              <span className="text-gray-600">Tipo de Serviço:</span>
-                              <span className="font-medium text-gray-900 ml-2">
-                                {item.type === 'events' ? 'Eventos' : item.type === 'portrait' ? 'Retratos' : 'Gestantes'}
-                              </span>
-                            </div>
-                            <div className="flex items-center">
-                              <span className="text-gray-600">Pacote Contratado:</span>
-                              <span className="font-medium text-gray-900 ml-2">{item.name}</span>
-                            </div>
-                            <div className="flex items-center">
-                              <span className="text-gray-600">Duração:</span>
-                              <span className="font-medium text-gray-900 ml-2">{item.duration}</span>
-                            </div>
-                            <div className="flex items-center">
-                              <span className="text-gray-600">Quantidade:</span>
-                              <span className="font-medium text-gray-900 ml-2">{item.quantity}x</span>
-                            </div>
-                            <div className="flex items-center">
-                              <span className="text-gray-600">Data do Evento:</span>
-                              <span className="font-medium text-gray-900 ml-2">
-                                {data[`date_${index}`] ? formatDate(data[`date_${index}`]) : 'Não informada'}
-                              </span>
-                            </div>
-                            <div className="flex items-center">
-                              <span className="text-gray-600">Horário:</span>
-                              <span className="font-medium text-gray-900 ml-2">
-                                {data[`time_${index}`] ? formatTime(data[`time_${index}`]) : 'Não informado'}
-                              </span>
-                            </div>
-                            <div className="flex items-center md:col-span-2">
-                              <span className="text-gray-600">Local:</span>
-                              <span className="font-medium text-gray-900 ml-2">
-                                {data[`eventLocation_${index}`] || 'Não informado'}
-                              </span>
-                            </div>
+              {/* Service Object - hidden for store-only checkout */}
+          {((data.cartItems && data.cartItems.length > 0) || !(data.storeItems && data.storeItems.length > 0)) && (
+            <div className="mb-8">
+              <h3 className="text-lg font-medium text-primary mb-4 pb-2 border-b border-secondary">
+                OBJETO DO CONTRATO
+              </h3>
+              {data.cartItems && data.cartItems.length > 0 ? (
+                <div className="space-y-6">
+                  {data.cartItems.map((item, index) => (
+                    <div key={`service-${index}`} className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                      <h4 className="text-lg font-medium text-primary mb-4">
+                        Serviço #{index + 1}: {item.name}
+                      </h4>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                          <div className="flex items-center">
+                            <span className="text-gray-600">Tipo de Serviço:</span>
+                            <span className="font-medium text-gray-900 ml-2">
+                              {item.type === 'events' ? 'Eventos' : item.type === 'portrait' ? 'Retratos' : 'Gestantes'}
+                            </span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="text-gray-600">Pacote Contratado:</span>
+                            <span className="font-medium text-gray-900 ml-2">{item.name}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="text-gray-600">Duração:</span>
+                            <span className="font-medium text-gray-900 ml-2">{item.duration}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="text-gray-600">Quantidade:</span>
+                            <span className="font-medium text-gray-900 ml-2">{item.quantity}x</span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="text-gray-600">Data do Evento:</span>
+                            <span className="font-medium text-gray-900 ml-2">
+                              {data[`date_${index}`] ? formatDate(data[`date_${index}`]) : 'Não informada'}
+                            </span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="text-gray-600">Horário:</span>
+                            <span className="font-medium text-gray-900 ml-2">
+                              {data[`time_${index}`] ? formatTime(data[`time_${index}`]) : 'Não informado'}
+                            </span>
+                          </div>
+                          <div className="flex items-center md:col-span-2">
+                            <span className="text-gray-600">Local:</span>
+                            <span className="font-medium text-gray-900 ml-2">
+                              {data[`eventLocation_${index}`] || 'Não informado'}
+                            </span>
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                    <p className="text-gray-600">Nenhum serviço contratado</p>
-                  </div>
-                )}
-              </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                  <p className="text-gray-600">Nenhum serviço contratado</p>
+                </div>
+              )}
+            </div>
+          )}
 
               {/* Service Summary */}
               <div className="mb-8">
@@ -558,14 +567,14 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="bg-white p-4 rounded-lg border border-gray-200">
                         <div className="text-center">
-                          <p className="text-sm text-gray-600 mb-1">Sinal (20% de sinal + 50% serv. adicional)</p>
+                          <p className="text-sm text-gray-600 mb-1">{payments.storeOnly ? 'Sinal (50%)' : 'Sinal (20% de sinal + 50% serv. adicional)'}</p>
                           <p className="text-xl font-bold text-primary">R$ {deposit.toFixed(2).replace('.', ',')}</p>
                           <p className="text-xs text-gray-500 mt-1">Na assinatura do contrato</p>
                         </div>
                       </div>
                       <div className="bg-white p-4 rounded-lg border border-gray-200">
                         <div className="text-center">
-                          <p className="text-sm text-gray-600 mb-1">Saldo Restante (80%)</p>
+                          <p className="text-sm text-gray-600 mb-1">{payments.storeOnly ? 'Saldo Restante (50%)' : 'Saldo Restante (80%)'}</p>
                           <p className="text-xl font-bold text-green-600">R$ {remaining.toFixed(2).replace('.', ',')}</p>
                           <p className="text-xs text-gray-500 mt-1">No dia do evento</p>
                         </div>

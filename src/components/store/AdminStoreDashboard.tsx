@@ -103,6 +103,15 @@ const AdminStoreDashboard: React.FC<AdminProps> = ({ onNavigate }) => {
         setAllOrders([]);
       }
 
+      // fetch contracts to include services in performance chart
+      try {
+        const cs = await getDocs(collection(db, 'contracts'));
+        const list = cs.docs.map(d => ({ id: d.id, ...(d.data() as any) }));
+        setContracts(list);
+      } catch {
+        setContracts([]);
+      }
+
       // load products for filter
       let psList: ProductLite[] = [];
       try {

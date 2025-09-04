@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { db } from '../../utils/firebaseClient';
 import { collection, deleteDoc, doc, getDocs, orderBy, query, updateDoc } from 'firebase/firestore';
-import { ChevronDown, ChevronUp, CheckCircle, Clock, FileText, Loader, Mail, MapPin, Phone, Settings, Trash2, User, DollarSign, Link as LinkIcon } from 'lucide-react';
+import { ChevronDown, ChevronUp, CheckCircle, Clock, FileText, Loader, Mail, MapPin, Phone, Settings, Trash2, User, DollarSign, Link as LinkIcon, Calendar } from 'lucide-react';
 
 interface ContractItem {
   id: string;

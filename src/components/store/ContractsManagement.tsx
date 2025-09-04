@@ -210,7 +210,15 @@ const ContractsManagement = () => {
                                 <td className="py-1">R$ {(Number(it.price) * Number(it.quantity)).toFixed(2)}</td>
                               </tr>
                             ))}
-                            {!((c.services && c.services.length) || (c.storeItems && c.storeItems.length)) && (
+                            {Number(c.travelFee || 0) > 0 && (
+                              <tr className="border-t">
+                                <td className="py-1">Deslocamento</td>
+                                <td className="py-1">1</td>
+                                <td className="py-1">R$ {Number(c.travelFee).toFixed(2)}</td>
+                                <td className="py-1">R$ {Number(c.travelFee).toFixed(2)}</td>
+                              </tr>
+                            )}
+                            {!((c.services && c.services.length) || (c.storeItems && c.storeItems.length) || Number(c.travelFee || 0) > 0) && (
                               <tr className="border-t"><td className="py-2 text-gray-500" colSpan={4}>Sin items</td></tr>
                             )}
                           </tbody>

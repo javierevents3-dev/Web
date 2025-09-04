@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { db } from '../../utils/firebaseClient';
 import { collection, deleteDoc, doc, getDocs, orderBy, query, updateDoc } from 'firebase/firestore';
 import { ChevronDown, ChevronUp, CheckCircle, Clock, FileText, Loader, Mail, MapPin, Phone, Settings, Trash2, User, DollarSign, Link as LinkIcon, Calendar, Pencil } from 'lucide-react';
+import { reserveOnCalendar } from '../../utils/googleCalendar';
 
 interface ContractItem {
   id: string;

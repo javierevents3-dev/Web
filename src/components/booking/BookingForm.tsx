@@ -11,9 +11,10 @@ interface BookingFormProps {
   packages: any[];
   onSubmit: (data: BookingFormData) => void;
   onBack: () => void;
+  isStoreOnly?: boolean;
 }
 
-const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubmit, onBack }) => {
+const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubmit, onBack, isStoreOnly = false }) => {
   const [formData, setFormData] = useState<BookingFormData>({
     ...initialData,
     discountCoupon: ''
@@ -84,46 +85,58 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
   };
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
+    let firstKey: string | undefined;
 
-    if (!formData.name.trim()) newErrors.name = 'Nome é obrigatório';
-    if (!formData.cpf.trim()) newErrors.cpf = 'CPF é obrigatório';
-    if (!formData.rg.trim()) newErrors.rg = 'RG é obrigatório';
-    if (!formData.address.trim()) newErrors.address = 'Endereço é obrigatório';
-    if (!formData.email.trim()) newErrors.email = 'Email é obrigatório';
-    if (!formData.phone.trim()) newErrors.phone = 'Telefone é obrigatório';
-    
+    const setErr = (key: string, msg: string) => {
+      if (!newErrors[key]) newErrors[key] = msg;
+      if (!firstKey) firstKey = key;
+    };
+
+    if (!formData.name.trim()) setErr('name', 'Nome é obrigatório');
+    if (!formData.cpf.trim()) setErr('cpf', 'CPF é obrigatório');
+    if (!formData.rg.trim()) setErr('rg', 'RG é obrigatório');
+    if (!formData.address.trim()) setErr('address', 'Endereço é obrigatório');
+    if (!formData.email.trim()) setErr('email', 'Email é obrigatório');
+    if (!formData.phone.trim()) setErr('phone', 'Telefone é obrigatório');
+
     // Validate each service in cart
     if (formData.cartItems && formData.cartItems.length > 0) {
       formData.cartItems.forEach((item, index) => {
-        if (!formData[`date_${index}`]) newErrors[`date_${index}`] = 'Data é obrigatória';
-        if (!formData[`time_${index}`]) newErrors[`time_${index}`] = 'Horário é obrigatório';
-        
+        if (!formData[`date_${index}`]) setErr(`date_${index}`, 'Data é obrigatória');
+        if (!formData[`time_${index}`]) setErr(`time_${index}`, 'Horário é obrigatório');
+
         // Validate date and time are not in the past
         if (formData[`date_${index}`] && formData[`time_${index}`]) {
           if (!validateDateTime(formData[`date_${index}`], formData[`time_${index}`])) {
-            newErrors[`date_${index}`] = 'Data e horário devem ser futuros';
-            newErrors[`time_${index}`] = 'Data e horário devem ser futuros';
+            setErr(`date_${index}`, 'Data e horário devem ser futuros');
+            setErr(`time_${index}`, 'Data e horário devem ser futuros');
           }
         }
-        
+
         if (!formData[`eventLocation_${index}`] || !formData[`eventLocation_${index}`].trim()) {
-          newErrors[`eventLocation_${index}`] = 'Localização é obrigatória';
+          setErr(`eventLocation_${index}`, 'Localização é obrigatória');
         }
       });
     } else if (!formData.storeItems || formData.storeItems.length === 0) {
-      newErrors.general = 'Nenhum serviço selecionado';
+      setErr('general', 'Nenhum serviço selecionado');
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return { isValid: Object.keys(newErrors).length === 0, firstErrorKey: firstKey, errors: newErrors };
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      // Scroll to top before submitting
+    const result = validateForm();
+    if (result.isValid) {
       window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-      setTimeout(() => onSubmit(formData), 100); // Small delay to ensure scroll completes
+      setTimeout(() => onSubmit(formData), 100);
+    } else if (result.firstErrorKey) {
+      const el = document.querySelector(`[name="${result.firstErrorKey}"]`) as HTMLElement | null;
+      if (el && typeof el.scrollIntoView === 'function') {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        try { (el as HTMLInputElement).focus?.(); } catch {}
+      }
     }
   };
 
@@ -138,8 +151,14 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
     <div className="min-h-screen bg-gray-50 py-12 pt-32">
       <div className="max-w-7xl mx-auto px-6">
         <div className="mb-8">
-          <h1 className="text-3xl font-playfair mb-2">Reservar Sessão ou Evento</h1>
-          <p className="text-gray-600">Preencha os dados abaixo para finalizar sua reserva</p>
+          {isStoreOnly ? (
+            <h1 className="text-3xl font-playfair mb-2">Preencha os dados para garantir sua compra.</h1>
+          ) : (
+            <>
+              <h1 className="text-3xl font-playfair mb-2">Reservar Sessão ou Evento</h1>
+              <p className="text-gray-600">Preencha os dados abaixo para finalizar sua reserva</p>
+            </>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -462,21 +481,22 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
               <section>
                 <h2 className="text-xl font-medium mb-6 pb-2 border-b">Configurações Gerais</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Taxa de Deslocamento (R$)
-                    </label>
-                    <input
-                      type="number"
-                      name="travelCost"
-                      value={formData.travelCost}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary"
-                      placeholder="0"
-                      min="0"
-                    />
-                  </div>
-
+                  {!isStoreOnly && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Taxa de Deslocamento (R$)
+                      </label>
+                      <input
+                        type="number"
+                        name="travelCost"
+                        value={formData.travelCost}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary"
+                        placeholder="0"
+                        min="0"
+                      />
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">

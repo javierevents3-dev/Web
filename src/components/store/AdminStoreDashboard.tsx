@@ -25,12 +25,13 @@ interface OrderItem {
 
 interface ProductLite { id: string; name: string }
 
-interface AdminProps { onNavigate?: (view: 'dashboard' | 'products' | 'orders') => void }
+interface AdminProps { onNavigate?: (view: 'dashboard' | 'products' | 'orders' | 'contracts') => void }
 const AdminStoreDashboard: React.FC<AdminProps> = ({ onNavigate }) => {
   const [stats, setStats] = useState({ products: 0, orders: 0, income: 0, customers: 0 });
   const [recentOrders, setRecentOrders] = useState<OrderItem[]>([]);
   const [allOrders, setAllOrders] = useState<OrderItem[]>([]);
   const [products, setProducts] = useState<ProductLite[]>([]);
+  const [contracts, setContracts] = useState<any[]>([]);
   const [selectedProductId, setSelectedProductId] = useState<'all' | string>('all');
   const [selectedProductIdB, setSelectedProductIdB] = useState<'none' | string>('none');
 
@@ -102,6 +103,15 @@ const AdminStoreDashboard: React.FC<AdminProps> = ({ onNavigate }) => {
         setAllOrders([]);
       }
 
+      // fetch contracts to include services in performance chart
+      try {
+        const cs = await getDocs(collection(db, 'contracts'));
+        const list = cs.docs.map(d => ({ id: d.id, ...(d.data() as any) }));
+        setContracts(list);
+      } catch {
+        setContracts([]);
+      }
+
       // load products for filter
       let psList: ProductLite[] = [];
       try {
@@ -135,12 +145,31 @@ const AdminStoreDashboard: React.FC<AdminProps> = ({ onNavigate }) => {
     })();
   }, []);
 
+  const salesTotals = useMemo(() => {
+    const services = (allOrders || []).reduce((sum, o) => sum + (o.status === 'completado' ? Number(o.total || 0) : 0), 0);
+    const packages = (contracts || []).reduce((sum, c: any) => sum + (c.eventCompleted ? Number(c.totalAmount || 0) : 0), 0);
+    return { services, packages };
+  }, [allOrders, contracts]);
+
   const statCards = useMemo(() => ([
-    { label: 'Total Productos', value: stats.products, icon: <Package className="text-primary" size={18} /> },
-    { label: 'Órdenes Totales', value: stats.orders, icon: <ClipboardList className="text-green-600" size={18} /> },
+    { label: 'Ventas Serv. Adicionales', value: `R$ ${salesTotals.services.toFixed(0)}` , icon: <DollarSign className="text-amber-500" size={18} /> },
+    { label: 'Ventas Paquetes Foto', value: `R$ ${salesTotals.packages.toFixed(0)}` , icon: <Package className="text-primary" size={18} /> },
     { label: 'Ingresos Totales', value: `$${stats.income}`, icon: <DollarSign className="text-amber-500" size={18} /> },
     { label: 'Nuevos Clientes', value: stats.customers, icon: <Users className="text-fuchsia-500" size={18} /> },
-  ]), [stats]);
+  ]), [salesTotals, stats]);
+
+  const nearestContracts = useMemo(() => {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const withDiff = (contracts || []).map((c: any) => {
+      const d = c.eventDate ? new Date(c.eventDate) : (c.contractDate ? new Date(c.contractDate) : new Date());
+      const time = isNaN(d.getTime()) ? Date.now() : d.getTime();
+      const diff = Math.abs(time - Date.now());
+      const future = time >= today.getTime();
+      return { c, diff, future };
+    });
+    withDiff.sort((a, b) => a.diff - b.diff);
+    return withDiff.slice(0, 5);
+  }, [contracts]);
 
   return (
     <div className="space-y-6">
@@ -173,38 +202,42 @@ const AdminStoreDashboard: React.FC<AdminProps> = ({ onNavigate }) => {
               Ver Órdenes
               <ArrowUpRight size={18} />
             </button>
+            <button onClick={() => onNavigate?.('contracts')} className="w-full border-2 border-black text-black px-4 py-3 rounded-none hover:bg-black hover:text-white flex items-center justify-center gap-2">
+              Ver Contratos
+              <ArrowUpRight size={18} />
+            </button>
             <button onClick={() => onNavigate?.('products')} className="w-full border-2 border-black text-black px-4 py-3 rounded-none hover:bg-black hover:text-white">
               Administrar Productos
             </button>
           </div>
         </div>
 
-        {/* Recent Orders */}
+        {/* Nearest Contracts */}
         <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-4">
-          <h3 className="font-medium mb-4">Órdenes Recientes</h3>
+          <h3 className="font-medium mb-4">Contratos Cercanos</h3>
           <div className="divide-y">
-            {recentOrders.length === 0 && (
+            {nearestContracts.length === 0 && (
               <div className="text-gray-500 text-sm p-4 flex items-center justify-between">
-                <span>No hay órdenes recientes</span>
+                <span>No hay contratos próximos</span>
               </div>
             )}
-            {recentOrders.map((o) => (
-              <div key={o.id} className="flex items-center justify-between py-3">
+            {nearestContracts.map(({ c, future }) => (
+              <div key={c.id} className="flex items-center justify-between py-3">
                 <div>
-                  <p className="font-medium lowercase first-letter:uppercase">{o.customer_name || 'cliente'}</p>
-                  <p className="text-xs text-gray-500">{o.created_at ? new Date(o.created_at).toLocaleDateString() : ''}</p>
+                  <p className="font-medium lowercase first-letter:uppercase">{c.clientName || 'cliente'}</p>
+                  <p className="text-xs text-gray-500">{c.eventDate ? new Date(c.eventDate).toLocaleDateString() : (c.contractDate ? new Date(c.contractDate).toLocaleDateString() : '')}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-semibold">${Number(o.total || 0).toFixed(0)}</span>
-                  <span className={`text-xs px-2 py-1 rounded-full ${o.status === 'completado' ? 'bg-green-100 text-green-700' : o.status === 'procesando' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                    {o.status || 'pendiente'}
+                  <span className="text-sm font-semibold">R$ {Number(c.totalAmount || 0).toFixed(0)}</span>
+                  <span className={`text-xs px-2 py-1 rounded-full ${c.eventCompleted ? 'bg-green-100 text-green-700' : future ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'}`}>
+                    {c.eventCompleted ? 'completado' : future ? 'pendiente' : 'pasado'}
                   </span>
                 </div>
               </div>
             ))}
           </div>
           <div className="pt-3">
-            <button onClick={() => onNavigate?.('orders')} className="w-full border-2 border-black text-black rounded-none py-2 hover:bg-black hover:text-white">Ver Todas las Órdenes</button>
+            <button onClick={() => onNavigate?.('contracts')} className="w-full border-2 border-black text-black rounded-none py-2 hover:bg-black hover:text-white">Ver Todos los Contratos</button>
           </div>
         </div>
       </div>
@@ -232,13 +265,14 @@ const AdminStoreDashboard: React.FC<AdminProps> = ({ onNavigate }) => {
         </div>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={computeMonthlyCompare(allOrders, selectedProductId, selectedProductIdB)} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+            <LineChart data={computeMonthlyCompare(allOrders, contracts, selectedProductId, selectedProductIdB)} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis />
               <Tooltip formatter={(v: any) => `$${Number(v).toFixed(0)}`} />
               <Legend />
               <Line type="monotone" dataKey="a" name={resolveName(products, selectedProductId)} stroke="#111827" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="forecast" name="Ingresos Futuros" stroke="#6b7280" strokeWidth={2} strokeDasharray="6 6" dot={false} />
               {selectedProductIdB !== 'none' && (
                 <Line type="monotone" dataKey="b" name={resolveName(products, selectedProductIdB)} stroke="#0ea5e9" strokeWidth={2} dot={false} />
               )}
@@ -256,12 +290,13 @@ function resolveName(products: ProductLite[], id: 'all' | 'none' | string) {
   return products.find(p => p.id === id)?.name || 'Producto';
 }
 
-function computeMonthlyCompare(orders: OrderItem[], aId: 'all' | string, bId: 'none' | string) {
+function computeMonthlyCompare(orders: OrderItem[], contracts: any[], aId: 'all' | string, bId: 'none' | string) {
   const now = new Date();
+  const today = new Date(); today.setHours(0,0,0,0);
   const months = Array.from({ length: 12 }).map((_, i) => {
     const d = new Date(now.getFullYear(), i, 1);
     const label = d.toLocaleString('es', { month: 'short' });
-    return { key: i, month: label.charAt(0).toUpperCase() + label.slice(1), a: 0, b: 0 };
+    return { key: i, month: label.charAt(0).toUpperCase() + label.slice(1), a: 0, b: 0, forecast: 0 } as any;
   });
 
   const getItemAmount = (it: OrderLineItem) => {
@@ -291,6 +326,25 @@ function computeMonthlyCompare(orders: OrderItem[], aId: 'all' | string, bId: 'n
         months[m].b += o.items
           .filter(it => (it.productId === bId) || (it.product_id === bId))
           .reduce((sum, it) => sum + getItemAmount(it), 0);
+      }
+    }
+  }
+
+  // include photography services (contracts) into 'a' series when viewing 'all'
+  if (aId === 'all') {
+    for (const c of (contracts || [])) {
+      const dateStr = (c.eventDate as string) || (c.contractDate as string) || (c.createdAt as string) || '';
+      if (!dateStr) continue;
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) continue;
+      const m = d.getMonth();
+      const amount = Number(c.totalAmount || 0) || 0;
+      const completed = Boolean(c.eventCompleted);
+      const isFuture = d.getTime() >= today.getTime();
+      if (completed) {
+        months[m].a += amount; // ventas
+      } else if (isFuture) {
+        months[m].forecast += amount; // ingresos futuros
       }
     }
   }

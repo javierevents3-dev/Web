@@ -7,6 +7,7 @@ import { useCart } from '../contexts/CartContext';
 import ProductEditorModal from '../components/store/ProductEditorModal';
 import AdminStoreDashboard from '../components/store/AdminStoreDashboard';
 import OrdersManagement from '../components/store/OrdersManagement';
+import ContractsManagement from '../components/store/ContractsManagement';
 
 interface StoreProduct extends Product {
   custom_text?: string;
@@ -16,7 +17,7 @@ const StorePage = () => {
   const [products, setProducts] = useState<StoreProduct[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('todos');
   const [isAdmin, setIsAdmin] = useState(false);
-  const [adminView, setAdminView] = useState<'dashboard' | 'products' | 'orders'>('dashboard');
+  const [adminView, setAdminView] = useState<'dashboard' | 'products' | 'orders' | 'contracts'>('dashboard');
   const [adminFullscreen, setAdminFullscreen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<StoreProduct | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
@@ -208,6 +209,7 @@ const StorePage = () => {
               <button onClick={() => setAdminView('dashboard')} className={`px-4 py-2 rounded-none border-2 ${adminView==='dashboard' ? 'bg-black text-white border-black' : 'border-black text-black hover:bg-black hover:text-white'}`}>Panel</button>
               <button onClick={() => setAdminView('products')} className={`px-4 py-2 rounded-none border-2 ${adminView==='products' ? 'bg-black text-white border-black' : 'border-black text-black hover:bg-black hover:text-white'}`}>Productos</button>
               <button onClick={() => setAdminView('orders')} className={`px-4 py-2 rounded-none border-2 ${adminView==='orders' ? 'bg-black text-white border-black' : 'border-black text-black hover:bg-black hover:text-white'}`}>Órdenes</button>
+              <button onClick={() => setAdminView('contracts')} className={`px-4 py-2 rounded-none border-2 ${adminView==='contracts' ? 'bg-black text-white border-black' : 'border-black text-black hover:bg-black hover:text-white'}`}>Contratos</button>
               <div className="ml-auto">
                 <button onClick={() => setAdminFullscreen(v => !v)} className="px-4 py-2 rounded-none border-2 border-black text-black hover:bg-black hover:text-white">{adminFullscreen ? 'Restaurar' : 'Maximizar'}</button>
               </div>
@@ -258,6 +260,9 @@ const StorePage = () => {
             {adminView === 'orders' && (
               <OrdersManagement />
             )}
+            {adminView === 'contracts' && (
+              <ContractsManagement />
+            )}
           </div>
         )}
 
@@ -268,6 +273,7 @@ const StorePage = () => {
                 <button onClick={() => setAdminView('dashboard')} className={`px-4 py-2 rounded-none border-2 ${adminView==='dashboard' ? 'bg-black text-white border-black' : 'border-black text-black hover:bg-black hover:text-white'}`}>Panel</button>
                 <button onClick={() => setAdminView('products')} className={`px-4 py-2 rounded-none border-2 ${adminView==='products' ? 'bg-black text-white border-black' : 'border-black text-black hover:bg-black hover:text-white'}`}>Productos</button>
                 <button onClick={() => setAdminView('orders')} className={`px-4 py-2 rounded-none border-2 ${adminView==='orders' ? 'bg-black text-white border-black' : 'border-black text-black hover:bg-black hover:text-white'}`}>Órdenes</button>
+                <button onClick={() => setAdminView('contracts')} className={`px-4 py-2 rounded-none border-2 ${adminView==='contracts' ? 'bg-black text-white border-black' : 'border-black text-black hover:bg-black hover:text-white'}`}>Contratos</button>
                 <div className="ml-auto">
                   <button onClick={() => setAdminFullscreen(false)} className="px-4 py-2 rounded-none border-2 border-black text-black hover:bg-black hover:text-white">Cerrar pantalla completa</button>
                 </div>
@@ -310,6 +316,7 @@ const StorePage = () => {
                 </div>
               )}
               {adminView === 'orders' && <OrdersManagement />}
+              {adminView === 'contracts' && <ContractsManagement />}
             </div>
           </div>
         )}

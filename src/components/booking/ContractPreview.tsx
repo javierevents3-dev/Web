@@ -10,8 +10,6 @@ import SignaturePad from './SignaturePad';
 import Button from '../ui/Button';
 import { generatePDF } from '../../utils/pdf';
 import { Camera, X, CheckCircle } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import LoginModal from '../auth/LoginModal';
 import { saveContract, updateContractStatus } from '../../utils/contractService';
 import { storage } from '../../utils/firebaseClient';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -27,9 +25,7 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
   const [isSignatureComplete, setIsSignatureComplete] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const contractRef = useRef<HTMLDivElement>(null);
-  const { user } = useAuth();
 
   const photographerSignature = 'https://i.imgur.com/QqWZGHc.png';
 
@@ -49,10 +45,6 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
   const handleConfirm = async () => {
     if (!contractRef.current || !isSignatureComplete) return;
 
-    if (!user) {
-      setShowRegistrationModal(true);
-      return;
-    }
 
     window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     setIsGeneratingPDF(true);
@@ -81,7 +73,7 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
       const pdfBlob = dataUrlToBlob(pdfDataUrl);
 
       // Upload to Firebase Storage
-      const fileRef = ref(storage, `contracts/${user?.uid}/${contractId}.pdf`);
+      const fileRef = ref(storage, `contracts/${(typeof window !== 'undefined' && localStorage.getItem('uid')) || 'anonymous'}/${contractId}.pdf`);
       await uploadBytes(fileRef, pdfBlob, { contentType: 'application/pdf' });
       const downloadUrl = await getDownloadURL(fileRef);
 
@@ -114,31 +106,29 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
   };
 
   const calculateTotal = () => {
-    if (!data.cartItems || data.cartItems.length === 0) return { subtotal: 0, couponDiscount: 0, paymentDiscount: 0, total: 0 };
-    
-    // Calculate items total considering coupon discounts
-    const itemsTotal = data.cartItems.reduce((sum, item, index) => {
+    // Calculate items total considering coupon discounts (handles empty services)
+    const itemsTotal = (data.cartItems || []).reduce((sum, item, index) => {
       const itemPrice = Number(item.price.replace(/[^0-9]/g, ''));
       const itemTotal = itemPrice * item.quantity;
       const coupon = data[`discountCoupon_${index}`];
-      
+
       // Apply item-specific discount for FREE coupon on prewedding items (excluding teaser)
       if (coupon === 'FREE' && item.id && item.id.includes('prewedding') && !item.id.includes('teaser')) {
         return sum; // FREE coupon makes the item free (0 cost)
       }
-      
+
       return sum + itemTotal;
     }, 0);
-    
+
     // Add store items to total
-    const storeItemsTotal = data.storeItems?.reduce((sum, item) => {
-      return sum + (item.price * item.quantity);
-    }, 0) || 0;
-    
-    const subtotal = itemsTotal + storeItemsTotal + data.travelCost;
-    
+    const storeItemsTotal = (data.storeItems || []).reduce((sum, item) => {
+      return sum + (Number(item.price) * Number(item.quantity));
+    }, 0);
+
+    const subtotal = itemsTotal + storeItemsTotal + (data.travelCost || 0);
+
     // Calculate coupon discounts for display
-    const couponDiscount = data.cartItems.reduce((sum, item, index) => {
+    const couponDiscount = (data.cartItems || []).reduce((sum, item, index) => {
       const coupon = data[`discountCoupon_${index}`];
       if (coupon === 'FREE' && item.id && item.id.includes('prewedding') && !item.id.includes('teaser')) {
         const itemPrice = Number(item.price.replace(/[^0-9]/g, ''));
@@ -146,16 +136,16 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
       }
       return sum;
     }, 0);
-    
+
     // Calculate original subtotal for payment discount calculation
-    const originalSubtotal = data.cartItems.reduce((sum, item) => {
+    const originalSubtotal = (data.cartItems || []).reduce((sum, item) => {
       const itemPrice = Number(item.price.replace(/[^0-9]/g, ''));
       return sum + (itemPrice * item.quantity);
-    }, 0) + storeItemsTotal + data.travelCost;
-    
+    }, 0) + storeItemsTotal + (data.travelCost || 0);
+
     const paymentDiscount = data.paymentMethod === 'cash' ? originalSubtotal * 0.05 : 0;
     const total = subtotal - paymentDiscount;
-    
+
     return {
       subtotal,
       couponDiscount,
@@ -166,6 +156,14 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
 
   const calculatePayments = () => {
     const { total } = calculateTotal();
+
+    const isStoreOnly = (!(data.cartItems && data.cartItems.length) && (data.storeItems && data.storeItems.length));
+
+    if (isStoreOnly) {
+      const deposit = Math.ceil(total * 0.5);
+      const remaining = Math.max(0, total - deposit);
+      return { deposit, remaining, storeOnly: true as const };
+    }
 
     // Calculate effective totals: services (with coupons) + travel, and store items
     const servicesEffective = (data.cartItems || []).reduce((sum, item, index) => {
@@ -182,11 +180,12 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
 
     const deposit = Math.ceil(servicesEffective * 0.2 + storeItemsTotal * 0.5);
     const remaining = Math.max(0, total - deposit);
-    return { deposit, remaining };
+    return { deposit, remaining, storeOnly: false as const };
   };
 
   const { subtotal, couponDiscount, paymentDiscount, total } = calculateTotal();
-  const { deposit, remaining } = calculatePayments();
+  const payments = calculatePayments();
+  const { deposit, remaining } = payments;
 
   const selectedDresses = data.selectedDresses?.map(dressId => 
     dressOptions.find(dress => dress.id === dressId)
@@ -207,11 +206,12 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
 
         <div className="p-8 space-y-8">
           {/* CLÁUSULAS CONTRATUAIS */}
+          {((!data.cartItems || data.cartItems.length === 0) && (data.storeItems && data.storeItems.length > 0)) ? null : (
           <div className="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden">
             <div className="bg-primary text-white px-8 py-4 border-b">
               <h2 className="text-xl font-playfair font-medium">Cláusulas Contratuais</h2>
             </div>
-            
+
             <div className="p-8 space-y-8">
               {/* Cláusula 1 */}
               <section>
@@ -292,6 +292,7 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
               </section>
             </div>
           </div>
+          )}
 
           {/* DADOS DO CONTRATO */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden">
@@ -332,67 +333,69 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
                 </div>
               </div>
 
-              {/* Service Object */}
-              <div className="mb-8">
-                <h3 className="text-lg font-medium text-primary mb-4 pb-2 border-b border-secondary">
-                  OBJETO DO CONTRATO
-                </h3>
-                {data.cartItems && data.cartItems.length > 0 ? (
-                  <div className="space-y-6">
-                    {data.cartItems.map((item, index) => (
-                      <div key={`service-${index}`} className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                        <h4 className="text-lg font-medium text-primary mb-4">
-                          Serviço #{index + 1}: {item.name}
-                        </h4>
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                            <div className="flex items-center">
-                              <span className="text-gray-600">Tipo de Serviço:</span>
-                              <span className="font-medium text-gray-900 ml-2">
-                                {item.type === 'events' ? 'Eventos' : item.type === 'portrait' ? 'Retratos' : 'Gestantes'}
-                              </span>
-                            </div>
-                            <div className="flex items-center">
-                              <span className="text-gray-600">Pacote Contratado:</span>
-                              <span className="font-medium text-gray-900 ml-2">{item.name}</span>
-                            </div>
-                            <div className="flex items-center">
-                              <span className="text-gray-600">Duração:</span>
-                              <span className="font-medium text-gray-900 ml-2">{item.duration}</span>
-                            </div>
-                            <div className="flex items-center">
-                              <span className="text-gray-600">Quantidade:</span>
-                              <span className="font-medium text-gray-900 ml-2">{item.quantity}x</span>
-                            </div>
-                            <div className="flex items-center">
-                              <span className="text-gray-600">Data do Evento:</span>
-                              <span className="font-medium text-gray-900 ml-2">
-                                {data[`date_${index}`] ? formatDate(data[`date_${index}`]) : 'Não informada'}
-                              </span>
-                            </div>
-                            <div className="flex items-center">
-                              <span className="text-gray-600">Horário:</span>
-                              <span className="font-medium text-gray-900 ml-2">
-                                {data[`time_${index}`] ? formatTime(data[`time_${index}`]) : 'Não informado'}
-                              </span>
-                            </div>
-                            <div className="flex items-center md:col-span-2">
-                              <span className="text-gray-600">Local:</span>
-                              <span className="font-medium text-gray-900 ml-2">
-                                {data[`eventLocation_${index}`] || 'Não informado'}
-                              </span>
-                            </div>
+              {/* Service Object - hidden for store-only checkout */}
+          {((data.cartItems && data.cartItems.length > 0) || !(data.storeItems && data.storeItems.length > 0)) && (
+            <div className="mb-8">
+              <h3 className="text-lg font-medium text-primary mb-4 pb-2 border-b border-secondary">
+                OBJETO DO CONTRATO
+              </h3>
+              {data.cartItems && data.cartItems.length > 0 ? (
+                <div className="space-y-6">
+                  {data.cartItems.map((item, index) => (
+                    <div key={`service-${index}`} className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                      <h4 className="text-lg font-medium text-primary mb-4">
+                        Serviço #{index + 1}: {item.name}
+                      </h4>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                          <div className="flex items-center">
+                            <span className="text-gray-600">Tipo de Serviço:</span>
+                            <span className="font-medium text-gray-900 ml-2">
+                              {item.type === 'events' ? 'Eventos' : item.type === 'portrait' ? 'Retratos' : 'Gestantes'}
+                            </span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="text-gray-600">Pacote Contratado:</span>
+                            <span className="font-medium text-gray-900 ml-2">{item.name}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="text-gray-600">Duração:</span>
+                            <span className="font-medium text-gray-900 ml-2">{item.duration}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="text-gray-600">Quantidade:</span>
+                            <span className="font-medium text-gray-900 ml-2">{item.quantity}x</span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="text-gray-600">Data do Evento:</span>
+                            <span className="font-medium text-gray-900 ml-2">
+                              {data[`date_${index}`] ? formatDate(data[`date_${index}`]) : 'Não informada'}
+                            </span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="text-gray-600">Horário:</span>
+                            <span className="font-medium text-gray-900 ml-2">
+                              {data[`time_${index}`] ? formatTime(data[`time_${index}`]) : 'Não informado'}
+                            </span>
+                          </div>
+                          <div className="flex items-center md:col-span-2">
+                            <span className="text-gray-600">Local:</span>
+                            <span className="font-medium text-gray-900 ml-2">
+                              {data[`eventLocation_${index}`] || 'Não informado'}
+                            </span>
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                    <p className="text-gray-600">Nenhum serviço contratado</p>
-                  </div>
-                )}
-              </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                  <p className="text-gray-600">Nenhum serviço contratado</p>
+                </div>
+              )}
+            </div>
+          )}
 
               {/* Service Summary */}
               <div className="mb-8">
@@ -551,7 +554,7 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
                    <div className="border-t border-gray-300 pt-4">
                     <div className="flex justify-between items-center">
                       <span className="text-xl font-medium text-primary">VALOR TOTAL:</span>
-                      <span className="text-2xl font-bold text-red-600">
+                      <span className="text-2xl font-bold text-green-600">
                       R$ {total.toFixed(2).replace('.', ',')}
                       </span>
                     </div>
@@ -564,14 +567,14 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="bg-white p-4 rounded-lg border border-gray-200">
                         <div className="text-center">
-                          <p className="text-sm text-gray-600 mb-1">Sinal (20% de sinal + 50% serv. adicional)</p>
+                          <p className="text-sm text-gray-600 mb-1">{payments.storeOnly ? 'Sinal (50%)' : 'Sinal (20% de sinal + 50% serv. adicional)'}</p>
                           <p className="text-xl font-bold text-primary">R$ {deposit.toFixed(2).replace('.', ',')}</p>
                           <p className="text-xs text-gray-500 mt-1">Na assinatura do contrato</p>
                         </div>
                       </div>
                       <div className="bg-white p-4 rounded-lg border border-gray-200">
                         <div className="text-center">
-                          <p className="text-sm text-gray-600 mb-1">Saldo Restante (80%)</p>
+                          <p className="text-sm text-gray-600 mb-1">{payments.storeOnly ? 'Saldo Restante (50%)' : 'Saldo Restante (80%)'}</p>
                           <p className="text-xl font-bold text-green-600">R$ {remaining.toFixed(2).replace('.', ',')}</p>
                           <p className="text-xs text-gray-500 mt-1">No dia do evento</p>
                         </div>
@@ -757,12 +760,6 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
         </div>
       )}
 
-      {/* Registration Modal */}
-      <LoginModal 
-        isOpen={showRegistrationModal} 
-        onClose={() => setShowRegistrationModal(false)}
-        initialMode="register"
-      />
     </>
   );
 };

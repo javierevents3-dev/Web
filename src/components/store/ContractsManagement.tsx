@@ -250,7 +250,10 @@ const ContractsManagement = () => {
                               formaPagamento: c.paymentMethod || '',
                               instagram: form.instagram || form.instagramHandle || '',
                               respostaConsentimento: form.acceptTerms ?? form.agreeTerms ?? '',
-                              inicioISO
+                              inicioISO,
+                              services: Array.isArray(c.services) ? c.services : [],
+                              storeItems: Array.isArray(c.storeItems) ? c.storeItems : [],
+                              totalAmount: Number(c.totalAmount || 0)
                             };
                             const event = buildCalendarEvent(fields);
                             setReservePreview({ fields, event });

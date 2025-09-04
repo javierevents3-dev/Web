@@ -150,7 +150,10 @@ const ContractsManagement = () => {
                   ? c.storeItems.reduce((sum, it: any) => sum + (Number(it.price || 0) * Number(it.quantity || 1)), 0)
                   : 0;
                 const total = Number(c.totalAmount || 0);
-                const deposit = Math.ceil(servicesEffective * 0.2 + storeItemsTotal * 0.5);
+                const hasServices = Array.isArray(c.services) && c.services.length > 0;
+                const deposit = hasServices
+                  ? Math.ceil(servicesEffective * 0.2 + storeItemsTotal * 0.5)
+                  : Math.ceil(total * 0.5);
                 return Math.max(0, total - deposit).toFixed(2);
               })()}</div>
               <div className="col-span-1 text-right">

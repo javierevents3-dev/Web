@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { db } from '../../utils/firebaseClient';
 import { collection, deleteDoc, doc, getDocs, orderBy, query, updateDoc } from 'firebase/firestore';
-import { ChevronDown, ChevronUp, CheckCircle, Clock, FileText, Loader, Mail, MapPin, Phone, Settings, Trash2, User, DollarSign, Link as LinkIcon, Calendar } from 'lucide-react';
+import { ChevronDown, ChevronUp, CheckCircle, Clock, FileText, Loader, Mail, MapPin, Phone, Settings, Trash2, User, DollarSign, Link as LinkIcon, Calendar, Pencil } from 'lucide-react';
 
 interface ContractItem {
   id: string;
@@ -28,6 +28,8 @@ const ContractsManagement = () => {
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState('');
+  const [editing, setEditing] = useState<ContractItem | null>(null);
+  const [editForm, setEditForm] = useState<any>({});
 
   const fetchContracts = async () => {
     setLoading(true);
@@ -92,6 +94,37 @@ const ContractsManagement = () => {
     if (!current) return;
     const next = !Boolean(current[field]);
     await updateDoc(doc(db, 'contracts', id), { [field]: next } as any);
+    await fetchContracts();
+  };
+
+  const openEdit = (c: ContractItem) => {
+    setEditing(c);
+    setEditForm({
+      clientName: c.clientName || '',
+      clientEmail: c.clientEmail || '',
+      eventDate: c.eventDate || '',
+      eventTime: (c as any).eventTime || '',
+      totalAmount: Number(c.totalAmount || 0),
+      travelFee: Number(c.travelFee || 0),
+      message: c.message || ''
+    });
+  };
+
+  const saveEdit = async () => {
+    if (!editing) return;
+    const id = editing.id;
+    const payload: Partial<ContractItem> = {
+      clientName: String(editForm.clientName || ''),
+      clientEmail: String(editForm.clientEmail || ''),
+      eventDate: String(editForm.eventDate || ''),
+      eventCompleted: editing.eventCompleted,
+      totalAmount: Number(editForm.totalAmount || 0),
+      travelFee: Number(editForm.travelFee || 0),
+      message: String(editForm.message || ''),
+    } as any;
+    if (editForm.eventTime != null) (payload as any).eventTime = String(editForm.eventTime || '');
+    await updateDoc(doc(db, 'contracts', id), payload as any);
+    setEditing(null);
     await fetchContracts();
   };
 
@@ -180,6 +213,14 @@ const ContractsManagement = () => {
               {expanded[c.id] && (
                 <div className="col-span-12 mt-3">
                   <div className="border rounded-lg p-3 bg-gray-50">
+                    <div className="flex items-center justify-end gap-2 mb-3">
+                      <button onClick={() => openEdit(c)} title="Modificar" className="border-2 border-black text-black px-2 py-1 rounded-none hover:bg-black hover:text-white inline-flex items-center">
+                        <Pencil size={14} />
+                      </button>
+                      <button onClick={() => remove(c.id)} title="Eliminar" className="border-2 border-black text-black px-2 py-1 rounded-none hover:bg-black hover:text-white inline-flex items-center">
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
                       <div className="flex items-center gap-2"><Phone size={14} className="text-gray-600"/><span>{c.formSnapshot?.phone || '-'}</span></div>
                       <div className="flex items-center gap-2"><MapPin size={14} className="text-gray-600"/><span>{c.formSnapshot?.address || '-'}</span></div>
@@ -265,7 +306,51 @@ const ContractsManagement = () => {
           ))}
         </div>
       </div>
-    </div>
+    {editing && (
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl border border-gray-200 w-full max-w-lg p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-medium">Editar Contrato</h3>
+            <button onClick={() => setEditing(null)} className="text-gray-500 hover:text-gray-900">✕</button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-gray-600">Nombre</label>
+              <input value={editForm.clientName || ''} onChange={e => setEditForm((f: any) => ({ ...f, clientName: e.target.value }))} className="w-full px-3 py-2 border rounded-none" />
+            </div>
+            <div>
+              <label className="text-xs text-gray-600">Email</label>
+              <input value={editForm.clientEmail || ''} onChange={e => setEditForm((f: any) => ({ ...f, clientEmail: e.target.value }))} className="w-full px-3 py-2 border rounded-none" />
+            </div>
+            <div>
+              <label className="text-xs text-gray-600">Fecha evento</label>
+              <input type="date" value={editForm.eventDate || ''} onChange={e => setEditForm((f: any) => ({ ...f, eventDate: e.target.value }))} className="w-full px-3 py-2 border rounded-none" />
+            </div>
+            <div>
+              <label className="text-xs text-gray-600">Hora</label>
+              <input type="time" value={editForm.eventTime || ''} onChange={e => setEditForm((f: any) => ({ ...f, eventTime: e.target.value }))} className="w-full px-3 py-2 border rounded-none" />
+            </div>
+            <div>
+              <label className="text-xs text-gray-600">Total</label>
+              <input type="number" step="0.01" value={editForm.totalAmount ?? 0} onChange={e => setEditForm((f: any) => ({ ...f, totalAmount: e.target.value }))} className="w-full px-3 py-2 border rounded-none" />
+            </div>
+            <div>
+              <label className="text-xs text-gray-600">Deslocamento</label>
+              <input type="number" step="0.01" value={editForm.travelFee ?? 0} onChange={e => setEditForm((f: any) => ({ ...f, travelFee: e.target.value }))} className="w-full px-3 py-2 border rounded-none" />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-xs text-gray-600">Notas</label>
+              <textarea value={editForm.message || ''} onChange={e => setEditForm((f: any) => ({ ...f, message: e.target.value }))} className="w-full px-3 py-2 border rounded-none" rows={3} />
+            </div>
+          </div>
+          <div className="mt-4 flex justify-end gap-2">
+            <button onClick={() => setEditing(null)} className="border-2 border-black text-black px-3 py-2 rounded-none hover:bg-black hover:text-white">Cancelar</button>
+            <button onClick={saveEdit} className="border-2 border-black bg-black text-white px-3 py-2 rounded-none hover:opacity-90">Guardar</button>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
   );
 };
 

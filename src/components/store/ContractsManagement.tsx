@@ -105,23 +105,28 @@ const ContractsManagement = () => {
         {!loading && filtered.length === 0 && <div className="p-4 text-sm text-gray-500">Sin resultados</div>}
         <div className="divide-y">
           {filtered.map(c => (
-            <div key={c.id} className="grid grid-cols-12 p-3 items-center">
+            <div key={c.id} className={`grid grid-cols-12 p-3 items-center ${!c.eventCompleted ? 'text-red-600' : ''}`}>
               <div className="col-span-1">
                 <button onClick={() => setExpanded(e => ({ ...e, [c.id]: !e[c.id] }))} className="border-2 border-black text-black px-2 py-1 rounded-none hover:bg-black hover:text-white inline-flex items-center">
                   {expanded[c.id] ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}
                 </button>
               </div>
               <div className="col-span-3 lowercase first-letter:uppercase">{c.clientName || 'cliente'}</div>
-              <div className="col-span-2 text-sm text-gray-700">{c.clientEmail || '-'}</div>
-              <div className="col-span-2 text-sm text-gray-600">{c.contractDate || (c.createdAt ? new Date(c.createdAt).toLocaleDateString() : '')}</div>
-              <div className="col-span-1 font-semibold">${Number(c.totalAmount || 0).toFixed(0)}</div>
-              <div className="col-span-2">
-                <div className="flex items-center gap-2 text-xs">
-                  <button onClick={() => toggleFlag(c.id, 'depositPaid')} className={`px-2 py-1 border-2 rounded-none ${c.depositPaid ? 'bg-green-600 text-white border-green-600' : 'border-green-600 text-green-600 hover:bg-green-600 hover:text-white'}`}>Seña</button>
-                  <button onClick={() => toggleFlag(c.id, 'finalPaymentPaid')} className={`px-2 py-1 border-2 rounded-none ${c.finalPaymentPaid ? 'bg-green-600 text-white border-green-600' : 'border-green-600 text-green-600 hover:bg-green-600 hover:text-white'}`}>Saldo</button>
-                  <button onClick={() => toggleFlag(c.id, 'eventCompleted')} className={`px-2 py-1 border-2 rounded-none ${c.eventCompleted ? 'bg-black text-white border-black' : 'border-black text-black hover:bg-black hover:text-white'}`}>Completado</button>
-                </div>
-              </div>
+              <div className="col-span-3 text-sm">{c.eventDate || '-'}</div>
+              <div className="col-span-1 text-sm">{(c as any).eventTime || '-'}</div>
+              <div className="col-span-2 font-semibold">R$ {Number(c.totalAmount || 0).toFixed(2)}</div>
+              <div className="col-span-1 font-semibold">R$ {(() => {
+                const servicesSum = Array.isArray(c.services) ? c.services.reduce((sum, it: any) => {
+                  const p = Number(String(it.price || '').replace(/[^0-9]/g, '')) / 100;
+                  const q = Number(it.quantity || 1);
+                  return sum + p * q;
+                }, 0) : 0;
+                const storeSum = Array.isArray(c.storeItems) ? c.storeItems.reduce((sum, it: any) => sum + (Number(it.price || 0) * Number(it.quantity || 1)), 0) : 0;
+                const travel = Number(c.travelFee || 0);
+                const total = Number(c.totalAmount || 0);
+                const deposit = servicesSum > 0 ? Math.ceil((servicesSum + travel) * 0.2 + storeSum * 0.5) : Math.ceil(total * 0.5);
+                return Math.max(0, total - deposit).toFixed(2);
+              })()}</div>
               <div className="col-span-1 text-right">
                 <div className="inline-flex items-center gap-2">
                   {c.pdfUrl && (
@@ -129,6 +134,7 @@ const ContractsManagement = () => {
                       <LinkIcon size={14} />
                     </a>
                   )}
+                  <button onClick={() => toggleFlag(c.id, 'eventCompleted')} className={`px-2 py-1 text-xs border-2 rounded-none ${c.eventCompleted ? 'bg-black text-white border-black' : 'border-black text-black hover:bg-black hover:text-white'}`}>Completado</button>
                   <button onClick={() => remove(c.id)} title="Eliminar" className="border-2 border-black text-black px-2 py-1 rounded-none hover:bg-black hover:text-white inline-flex items-center"><Trash2 size={14}/></button>
                 </div>
               </div>

@@ -309,6 +309,18 @@ function computeMonthlyCompare(orders: OrderItem[], contracts: any[], aId: 'all'
     }
   }
 
+  // include photography services (contracts) into 'a' series when viewing 'all'
+  if (aId === 'all') {
+    for (const c of (contracts || [])) {
+      const dateStr = (c.eventDate as string) || (c.contractDate as string) || (c.createdAt as string) || '';
+      if (!dateStr) continue;
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) continue;
+      const m = d.getMonth();
+      months[m].a += Number(c.totalAmount || 0) || 0;
+    }
+  }
+
   return months;
 }
 

@@ -253,6 +253,7 @@ const AdminStoreDashboard: React.FC<AdminProps> = ({ onNavigate }) => {
               <Tooltip formatter={(v: any) => `$${Number(v).toFixed(0)}`} />
               <Legend />
               <Line type="monotone" dataKey="a" name={resolveName(products, selectedProductId)} stroke="#111827" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="forecast" name="Ingresos Futuros" stroke="#6b7280" strokeWidth={2} strokeDasharray="6 6" dot={false} />
               {selectedProductIdB !== 'none' && (
                 <Line type="monotone" dataKey="b" name={resolveName(products, selectedProductIdB)} stroke="#0ea5e9" strokeWidth={2} dot={false} />
               )}
@@ -272,10 +273,11 @@ function resolveName(products: ProductLite[], id: 'all' | 'none' | string) {
 
 function computeMonthlyCompare(orders: OrderItem[], contracts: any[], aId: 'all' | string, bId: 'none' | string) {
   const now = new Date();
+  const today = new Date(); today.setHours(0,0,0,0);
   const months = Array.from({ length: 12 }).map((_, i) => {
     const d = new Date(now.getFullYear(), i, 1);
     const label = d.toLocaleString('es', { month: 'short' });
-    return { key: i, month: label.charAt(0).toUpperCase() + label.slice(1), a: 0, b: 0 };
+    return { key: i, month: label.charAt(0).toUpperCase() + label.slice(1), a: 0, b: 0, forecast: 0 } as any;
   });
 
   const getItemAmount = (it: OrderLineItem) => {
@@ -317,7 +319,14 @@ function computeMonthlyCompare(orders: OrderItem[], contracts: any[], aId: 'all'
       const d = new Date(dateStr);
       if (isNaN(d.getTime())) continue;
       const m = d.getMonth();
-      months[m].a += Number(c.totalAmount || 0) || 0;
+      const amount = Number(c.totalAmount || 0) || 0;
+      const completed = Boolean(c.eventCompleted);
+      const isFuture = d.getTime() >= today.getTime();
+      if (completed) {
+        months[m].a += amount; // ventas
+      } else if (isFuture) {
+        months[m].forecast += amount; // ingresos futuros
+      }
     }
   }
 

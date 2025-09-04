@@ -57,8 +57,14 @@ const BookingPage = () => {
       setFormData(prev => ({
         ...prev,
         cartItems: serviceItems,
-        storeItems
+        storeItems,
+        travelCost: serviceItems.length === 0 && storeItems.length > 0 ? 0 : prev.travelCost
       }));
+
+      // If only store items, skip contract and go directly to form
+      if (serviceItems.length === 0 && storeItems.length > 0 && currentStep === 'contract') {
+        setCurrentStep('form');
+      }
     } else {
       console.log('🛒 BookingPage: No cart items found');
       setFormData(prev => ({ ...prev, cartItems: [], storeItems: [] }));
@@ -188,7 +194,7 @@ const BookingPage = () => {
               onClick={() => window.location.href = '/'}
               className="btn-primary"
             >
-              Voltar ao Início
+              Voltar ao In��cio
             </button>
           </div>
         </div>
@@ -197,6 +203,11 @@ const BookingPage = () => {
   }
 
   if (currentStep === 'contract') {
+    // Do not show contract step if it's a store-only checkout
+    const isStoreOnly = (formData.cartItems?.length || 0) === 0 && (formData.storeItems?.length || 0) > 0;
+    if (isStoreOnly) {
+      setCurrentStep('form');
+    }
     if (showStorePopup) {
       return (
         <StorePopup
@@ -233,6 +244,7 @@ const BookingPage = () => {
         packages={allPackages}
         onSubmit={handleFormSubmit}
         onBack={handleBackToContract}
+        isStoreOnly={(formData.cartItems?.length || 0) === 0 && (formData.storeItems?.length || 0) > 0}
       />
     </>
   );

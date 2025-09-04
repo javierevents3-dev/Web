@@ -45,9 +45,8 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
     onConfirm();
   };
 
-  const handleConfirm = async () => {
+  const proceedFinalize = async () => {
     if (!contractRef.current || !isSignatureComplete) return;
-
 
     window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     setIsGeneratingPDF(true);
@@ -98,6 +97,10 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
     } finally {
       setIsGeneratingPDF(false);
     }
+  };
+
+  const handleConfirm = async () => {
+    setShowPaymentModal(true);
   };
 
   const formatDate = (dateStr: string) => {

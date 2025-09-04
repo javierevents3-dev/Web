@@ -755,8 +755,10 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
                     });
                     const url = preference.init_point || preference.sandbox_init_point;
                     if (url) window.open(url, '_blank');
+                    setShowPaymentSuccess(true);
                     await proceedFinalize();
                     setShowPaymentModal(false);
+                    setShowPaymentSuccess(false);
                   } catch (e) {
                     console.error('Mercado Pago preference error', e);
                     alert('Erro ao iniciar pagamento. Configure seu endpoint /api/mercadopago/create-preference.');
@@ -767,6 +769,17 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
                 className="w-full border-2 border-black bg-black text-white px-3 py-2 rounded-none hover:opacity-90 disabled:opacity-50"
               >{isCreatingPreference ? 'Iniciando pagamento...' : 'Pagar agora e gerar PDF'}</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showPaymentSuccess && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl border border-gray-200 w-full max-w-sm p-6 text-center">
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
+              <CheckCircle className="h-10 w-10 text-green-600 animate-bounce" />
+            </div>
+            <div className="text-lg font-semibold text-green-700">Pagamento Realizado</div>
           </div>
         </div>
       )}

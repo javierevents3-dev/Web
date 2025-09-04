@@ -10,8 +10,6 @@ import SignaturePad from './SignaturePad';
 import Button from '../ui/Button';
 import { generatePDF } from '../../utils/pdf';
 import { Camera, X, CheckCircle } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import LoginModal from '../auth/LoginModal';
 import { saveContract, updateContractStatus } from '../../utils/contractService';
 import { storage } from '../../utils/firebaseClient';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -27,9 +25,7 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
   const [isSignatureComplete, setIsSignatureComplete] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const contractRef = useRef<HTMLDivElement>(null);
-  const { user } = useAuth();
 
   const photographerSignature = 'https://i.imgur.com/QqWZGHc.png';
 
@@ -49,10 +45,6 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
   const handleConfirm = async () => {
     if (!contractRef.current || !isSignatureComplete) return;
 
-    if (!user) {
-      setShowRegistrationModal(true);
-      return;
-    }
 
     window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     setIsGeneratingPDF(true);
@@ -81,7 +73,7 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
       const pdfBlob = dataUrlToBlob(pdfDataUrl);
 
       // Upload to Firebase Storage
-      const fileRef = ref(storage, `contracts/${user?.uid}/${contractId}.pdf`);
+      const fileRef = ref(storage, `contracts/${(typeof window !== 'undefined' && localStorage.getItem('uid')) || 'anonymous'}/${contractId}.pdf`);
       await uploadBytes(fileRef, pdfBlob, { contentType: 'application/pdf' });
       const downloadUrl = await getDownloadURL(fileRef);
 
@@ -759,12 +751,6 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
         </div>
       )}
 
-      {/* Registration Modal */}
-      <LoginModal 
-        isOpen={showRegistrationModal} 
-        onClose={() => setShowRegistrationModal(false)}
-        initialMode="register"
-      />
     </>
   );
 };

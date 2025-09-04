@@ -270,7 +270,7 @@ function resolveName(products: ProductLite[], id: 'all' | 'none' | string) {
   return products.find(p => p.id === id)?.name || 'Producto';
 }
 
-function computeMonthlyCompare(orders: OrderItem[], aId: 'all' | string, bId: 'none' | string) {
+function computeMonthlyCompare(orders: OrderItem[], contracts: any[], aId: 'all' | string, bId: 'none' | string) {
   const now = new Date();
   const months = Array.from({ length: 12 }).map((_, i) => {
     const d = new Date(now.getFullYear(), i, 1);

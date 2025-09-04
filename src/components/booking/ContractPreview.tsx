@@ -10,6 +10,7 @@ import SignaturePad from './SignaturePad';
 import Button from '../ui/Button';
 import { generatePDF } from '../../utils/pdf';
 import { Camera, X, CheckCircle } from 'lucide-react';
+import { createPreference } from '../../utils/mercadoPago';
 import { saveContract, updateContractStatus } from '../../utils/contractService';
 import { storage } from '../../utils/firebaseClient';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';

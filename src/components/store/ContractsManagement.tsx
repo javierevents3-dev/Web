@@ -124,7 +124,7 @@ const ContractsManagement = () => {
         {!loading && filtered.length === 0 && <div className="p-4 text-sm text-gray-500">Sin resultados</div>}
         <div className="divide-y">
           {filtered.map(c => (
-            <div key={c.id} className={`grid grid-cols-12 p-3 items-center ${!c.eventCompleted ? 'text-red-600' : ''}`}>
+            <div key={c.id} className={`grid grid-cols-12 p-3 items-center ${c.eventCompleted ? 'bg-green-50 text-green-800' : ''} ${!c.eventCompleted ? 'text-red-600' : ''}`}>
               <div className="col-span-1">
                 <button onClick={() => setExpanded(e => ({ ...e, [c.id]: !e[c.id] }))} className="border-2 border-black text-black px-2 py-1 rounded-none hover:bg-black hover:text-white inline-flex items-center">
                   {expanded[c.id] ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}
@@ -153,7 +153,7 @@ const ContractsManagement = () => {
                       <LinkIcon size={14} />
                     </a>
                   )}
-                  <button onClick={() => toggleFlag(c.id, 'eventCompleted')} className={`px-2 py-1 text-xs border-2 rounded-none ${c.eventCompleted ? 'bg-black text-white border-black' : 'border-black text-black hover:bg-black hover:text-white'}`}>Completado</button>
+                  <button onClick={() => toggleFlag(c.id, 'eventCompleted')} className={`px-2 py-1 text-xs border-2 rounded-none ${c.eventCompleted ? 'bg-green-600 text-white border-green-600 hover:bg-green-700' : 'border-black text-black hover:bg-black hover:text-white'}`}>Completado</button>
                   <button onClick={() => remove(c.id)} title="Eliminar" className="border-2 border-black text-black px-2 py-1 rounded-none hover:bg-black hover:text-white inline-flex items-center"><Trash2 size={14}/></button>
                 </div>
               </div>

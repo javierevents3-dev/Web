@@ -221,6 +221,49 @@ const ContractsManagement = () => {
                       <button onClick={() => remove(c.id)} title="Eliminar" className="border-2 border-black text-black px-2 py-1 rounded-none hover:bg-black hover:text-white inline-flex items-center">
                         <Trash2 size={14} />
                       </button>
+                      <button
+                        onClick={async () => {
+                          try {
+                            const form = (c as any).formSnapshot || {};
+                            const inicioISO = (() => {
+                              const dateStr = c.eventDate || '';
+                              const timeStr = (c as any).eventTime || '00:00';
+                              if (!dateStr) return new Date().toISOString();
+                              const iso = `${dateStr}T${timeStr}`;
+                              const d = new Date(iso);
+                              return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+                            })();
+                            const fields = {
+                              email: c.clientEmail,
+                              nome: c.clientName,
+                              telefone: form.phone || form.telefone || '',
+                              endereco: form.address || form.endereco || '',
+                              deslocamento: Number(c.travelFee || 0),
+                              tipoEvento: c.eventType || '',
+                              pacote: c.packageTitle || '',
+                              figurino: Array.isArray(form.selectedDresses) ? form.selectedDresses.join(', ') : (form.figurino || ''),
+                              pacoteFoto: (Array.isArray(c.services) && c.services.find((s: any) => String(s.name||'').toLowerCase().includes('foto'))?.name) || '',
+                              pacoteVideo: (Array.isArray(c.services) && c.services.find((s: any) => String(s.name||'').toLowerCase().includes('vídeo') || String(s.name||'').toLowerCase().includes('video'))?.name) || '',
+                              pacoteFotoVideo: (Array.isArray(c.services) && c.services.find((s: any) => String(s.name||'').toLowerCase().includes('foto +'))?.name) || '',
+                              formaPagamento: c.paymentMethod || '',
+                              instagram: form.instagram || form.instagramHandle || '',
+                              respostaConsentimento: form.acceptTerms ?? form.agreeTerms ?? '',
+                              inicioISO
+                            };
+                            const result = await reserveOnCalendar(fields, { calendarId: 'primary' });
+                            const message = result.event?.description || 'Reserva preparada';
+                            console.log('[Reserva]', message);
+                            alert('Reserva generada y registrada en consola.');
+                          } catch (e:any) {
+                            console.error('Error reservando en Google Calendar', e);
+                            alert('Error al preparar la reserva. Revisa consola.');
+                          }
+                        }}
+                        title="Reservar en Google Calendar"
+                        className="border-2 border-black text-black px-2 py-1 rounded-none hover:bg-black hover:text-white inline-flex items-center"
+                      >
+                        <Calendar size={14} />
+                      </button>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
                       <div className="flex items-center gap-2"><Phone size={14} className="text-gray-600"/><span>{c.formSnapshot?.phone || '-'}</span></div>

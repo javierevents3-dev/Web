@@ -750,7 +750,34 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
                   try {
                     setIsCreatingPreference(true);
                     setShowPaymentSuccess(true);
-                    setShowPaymentSuccess(true);
+                    try {
+                      const date0: any = (data as any)[`date_0`];
+                      const time0: any = (data as any)[`time_0`];
+                      const startIso = (date0 && time0) ? new Date(`${date0}T${time0}`).toISOString() : new Date().toISOString();
+                      const first = (data.cartItems && data.cartItems[0]) ? data.cartItems[0] : null as any;
+                      const tipo = first ? (first.type === 'events' ? 'Eventos' : first.type === 'portrait' ? 'Retratos' : 'Gestantes') : 'Evento';
+                      const endereco: any = (data as any)[`eventLocation_0`] || '';
+                      const figurino = (selectedDresses || []).map(d => d.name).join(', ');
+                      await reserveOnCalendar({
+                        email: data.email,
+                        nome: data.name,
+                        telefone: data.phone,
+                        endereco,
+                        deslocamento: Number(data.travelCost || 0),
+                        tipoEvento: tipo,
+                        pacote: first?.name || '',
+                        figurino,
+                        formaPagamento: data.paymentMethod,
+                        respostaConsentimento: (data as any).acceptTerms,
+                        inicioISO: startIso,
+                        services: data.cartItems || [],
+                        storeItems: data.storeItems || [],
+                        totalAmount: total,
+                        eventCompleted: false
+                      }, { calendarId: 'primary' });
+                    } catch (err) {
+                      console.error('Calendar reserve failed', err);
+                    }
                     await proceedFinalize();
                     setShowPaymentModal(false);
                   } catch (e) {

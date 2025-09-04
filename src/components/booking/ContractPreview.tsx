@@ -744,17 +744,7 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
                 onClick={async () => {
                   try {
                     setIsCreatingPreference(true);
-                    const preference = await createPreference({
-                      items: [{
-                        title: `Sinal - ${data.name}`,
-                        quantity: 1,
-                        unit_price: Number(payments.deposit.toFixed(2))
-                      }],
-                      external_reference: `${data.email}-${Date.now()}`,
-                      payer: { name: data.name, email: data.email }
-                    });
-                    const url = preference.init_point || preference.sandbox_init_point;
-                    if (url) window.open(url, '_blank');
+                    setShowPaymentSuccess(true);
                     setShowPaymentSuccess(true);
                     await proceedFinalize();
                     setShowPaymentModal(false);

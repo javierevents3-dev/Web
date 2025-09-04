@@ -28,6 +28,7 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [isCreatingPreference, setIsCreatingPreference] = useState(false);
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const contractRef = useRef<HTMLDivElement>(null);
 
   const photographerSignature = 'https://i.imgur.com/QqWZGHc.png';

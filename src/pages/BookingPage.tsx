@@ -194,7 +194,7 @@ const BookingPage = () => {
               onClick={() => window.location.href = '/'}
               className="btn-primary"
             >
-              Voltar ao In��cio
+              Voltar ao Início
             </button>
           </div>
         </div>
@@ -203,11 +203,6 @@ const BookingPage = () => {
   }
 
   if (currentStep === 'contract') {
-    // Do not show contract step if it's a store-only checkout
-    const isStoreOnly = (formData.cartItems?.length || 0) === 0 && (formData.storeItems?.length || 0) > 0;
-    if (isStoreOnly) {
-      setCurrentStep('form');
-    }
     if (showStorePopup) {
       return (
         <StorePopup

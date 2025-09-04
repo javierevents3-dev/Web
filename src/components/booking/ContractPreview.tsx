@@ -207,11 +207,12 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
 
         <div className="p-8 space-y-8">
           {/* CLÁUSULAS CONTRATUAIS */}
+          {((!data.cartItems || data.cartItems.length === 0) && (data.storeItems && data.storeItems.length > 0)) ? null : (
           <div className="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden">
             <div className="bg-primary text-white px-8 py-4 border-b">
               <h2 className="text-xl font-playfair font-medium">Cláusulas Contratuais</h2>
             </div>
-            
+
             <div className="p-8 space-y-8">
               {/* Cláusula 1 */}
               <section>
@@ -292,6 +293,7 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
               </section>
             </div>
           </div>
+          )}
 
           {/* DADOS DO CONTRATO */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden">

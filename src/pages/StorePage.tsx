@@ -17,7 +17,7 @@ const StorePage = () => {
   const [products, setProducts] = useState<StoreProduct[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('todos');
   const [isAdmin, setIsAdmin] = useState(false);
-  const [adminView, setAdminView] = useState<'dashboard' | 'products' | 'orders'>('dashboard');
+  const [adminView, setAdminView] = useState<'dashboard' | 'products' | 'orders' | 'contracts'>('dashboard');
   const [adminFullscreen, setAdminFullscreen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<StoreProduct | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);

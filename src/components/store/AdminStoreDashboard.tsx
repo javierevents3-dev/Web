@@ -152,6 +152,19 @@ const AdminStoreDashboard: React.FC<AdminProps> = ({ onNavigate }) => {
     { label: 'Nuevos Clientes', value: stats.customers, icon: <Users className="text-fuchsia-500" size={18} /> },
   ]), [stats]);
 
+  const nearestContracts = useMemo(() => {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const withDiff = (contracts || []).map((c: any) => {
+      const d = c.eventDate ? new Date(c.eventDate) : (c.contractDate ? new Date(c.contractDate) : new Date());
+      const time = isNaN(d.getTime()) ? Date.now() : d.getTime();
+      const diff = Math.abs(time - Date.now());
+      const future = time >= today.getTime();
+      return { c, diff, future };
+    });
+    withDiff.sort((a, b) => a.diff - b.diff);
+    return withDiff.slice(0, 5);
+  }, [contracts]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -193,32 +206,32 @@ const AdminStoreDashboard: React.FC<AdminProps> = ({ onNavigate }) => {
           </div>
         </div>
 
-        {/* Recent Orders */}
+        {/* Nearest Contracts */}
         <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-4">
-          <h3 className="font-medium mb-4">Órdenes Recientes</h3>
+          <h3 className="font-medium mb-4">Contratos Cercanos</h3>
           <div className="divide-y">
-            {recentOrders.length === 0 && (
+            {nearestContracts.length === 0 && (
               <div className="text-gray-500 text-sm p-4 flex items-center justify-between">
-                <span>No hay órdenes recientes</span>
+                <span>No hay contratos próximos</span>
               </div>
             )}
-            {recentOrders.map((o) => (
-              <div key={o.id} className="flex items-center justify-between py-3">
+            {nearestContracts.map(({ c, future }) => (
+              <div key={c.id} className="flex items-center justify-between py-3">
                 <div>
-                  <p className="font-medium lowercase first-letter:uppercase">{o.customer_name || 'cliente'}</p>
-                  <p className="text-xs text-gray-500">{o.created_at ? new Date(o.created_at).toLocaleDateString() : ''}</p>
+                  <p className="font-medium lowercase first-letter:uppercase">{c.clientName || 'cliente'}</p>
+                  <p className="text-xs text-gray-500">{c.eventDate ? new Date(c.eventDate).toLocaleDateString() : (c.contractDate ? new Date(c.contractDate).toLocaleDateString() : '')}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-semibold">${Number(o.total || 0).toFixed(0)}</span>
-                  <span className={`text-xs px-2 py-1 rounded-full ${o.status === 'completado' ? 'bg-green-100 text-green-700' : o.status === 'procesando' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                    {o.status || 'pendiente'}
+                  <span className="text-sm font-semibold">R$ {Number(c.totalAmount || 0).toFixed(0)}</span>
+                  <span className={`text-xs px-2 py-1 rounded-full ${c.eventCompleted ? 'bg-green-100 text-green-700' : future ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'}`}>
+                    {c.eventCompleted ? 'completado' : future ? 'pendiente' : 'pasado'}
                   </span>
                 </div>
               </div>
             ))}
           </div>
           <div className="pt-3">
-            <button onClick={() => onNavigate?.('orders')} className="w-full border-2 border-black text-black rounded-none py-2 hover:bg-black hover:text-white">Ver Todas las Órdenes</button>
+            <button onClick={() => onNavigate?.('contracts')} className="w-full border-2 border-black text-black rounded-none py-2 hover:bg-black hover:text-white">Ver Todos los Contratos</button>
           </div>
         </div>
       </div>

@@ -316,6 +316,7 @@ const StorePage = () => {
                 </div>
               )}
               {adminView === 'orders' && <OrdersManagement />}
+              {adminView === 'contracts' && <ContractsManagement />}
             </div>
           </div>
         )}

@@ -761,7 +761,8 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
                     setShowPaymentSuccess(false);
                   } catch (e) {
                     console.error('Mercado Pago preference error', e);
-                    alert('Erro ao iniciar pagamento. Configure seu endpoint /api/mercadopago/create-preference.');
+                    await proceedFinalize();
+                    setShowPaymentModal(false);
                   } finally {
                     setIsCreatingPreference(false);
                   }

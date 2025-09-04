@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import CalendarSetupInstructions from '../components/ui/CalendarSetupInstructions';
 import { db } from '../utils/firebaseClient';
 import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
 import {
@@ -27,6 +28,7 @@ import {
 } from 'lucide-react';
 
 const AdminPage = () => {
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [dateRange, setDateRange] = useState('month');
   const [financialData, setFinancialData] = useState({
     totalIncome: 0,
@@ -165,6 +167,21 @@ const AdminPage = () => {
           <h1 className="text-3xl font-bold">Financial Dashboard</h1>
           
           <div className="flex items-center gap-4">
+            <div className="flex gap-2">
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                className={`px-4 py-2 rounded-lg ${activeTab === 'dashboard' ? 'bg-primary text-white' : 'bg-white text-primary border border-primary'}`}
+              >
+                Dashboard
+              </button>
+              <button
+                onClick={() => setActiveTab('calendar')}
+                className={`px-4 py-2 rounded-lg ${activeTab === 'calendar' ? 'bg-primary text-white' : 'bg-white text-primary border border-primary'}`}
+              >
+                Calendário
+              </button>
+            </div>
+            
             <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
@@ -185,6 +202,14 @@ const AdminPage = () => {
           </div>
         </div>
 
+        {activeTab === 'calendar' && (
+          <div className="mb-8">
+            <CalendarSetupInstructions />
+          </div>
+        )}
+
+        {activeTab === 'dashboard' && (
+          <>
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg shadow">
@@ -357,6 +382,8 @@ const AdminPage = () => {
             </div>
           </div>
         </div>
+          </>
+        )}
       </div>
     </div>
   );

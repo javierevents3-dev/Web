@@ -13,6 +13,7 @@ import { Camera, X, CheckCircle } from 'lucide-react';
 import { saveContract, updateContractStatus } from '../../utils/contractService';
 import { storage } from '../../utils/firebaseClient';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import PaymentModal from './PaymentModal';
 
 interface ContractPreviewProps {
   data: BookingFormData;
@@ -25,6 +26,7 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
   const [isSignatureComplete, setIsSignatureComplete] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const contractRef = useRef<HTMLDivElement>(null);
 
   const photographerSignature = 'https://i.imgur.com/QqWZGHc.png';
@@ -45,13 +47,18 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
   const handleConfirm = async () => {
     if (!contractRef.current || !isSignatureComplete) return;
 
-
     window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-    setIsGeneratingPDF(true);
+    
+    // Open payment modal instead of directly generating PDF
+    setShowPaymentModal(true);
+  };
 
+  const handlePaymentSuccess = async () => {
     try {
+      setIsGeneratingPDF(true);
+      
       // Generate PDF data URL
-      const pdfDataUrl = await generatePDF(contractRef.current);
+      const pdfDataUrl = await generatePDF(contractRef.current!);
 
       // Save contract data to Firestore
       const contractId = await saveContract(data);
@@ -281,7 +288,7 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
               {/* Cláusula 6 */}
               <section>
                 <h3 className="text-lg font-medium text-primary mb-4 pb-2 border-b border-secondary">
-                  CLÁUSULA 6ª ��� DA CLÁUSULA PENAL
+                  CLÁUSULA 6ª – DA CLÁUSULA PENAL
                 </h3>
                 <div className="space-y-3 text-sm text-gray-700">
                   <p>6.1. O descumprimento, por qualquer das partes, das obrigações assumidas neste contrato, sujeitará a parte infratora ao pagamento de multa equivalente a 1/3 (um terço) do valor total do contrato, sem prejuízo de eventuais perdas e danos.</p>
@@ -708,7 +715,7 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
             onClick={handleConfirm}
             disabled={!isSignatureComplete || isGeneratingPDF}
           >
-            {isGeneratingPDF ? 'Gerando PDF...' : 'Confirmar e Gerar PDF'}
+            {isGeneratingPDF ? 'Gerando PDF...' : 'Confirmar Pagamento e Agendar'}
           </Button>
         </div>
       </div>
@@ -759,6 +766,14 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
           </div>
         </div>
       )}
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        bookingData={data}
+        onSuccess={handlePaymentSuccess}
+      />
 
     </>
   );

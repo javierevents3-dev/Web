@@ -765,13 +765,6 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
                 }}
                 className="w-full border-2 border-black bg-black text-white px-3 py-2 rounded-none hover:opacity-90 disabled:opacity-50"
               >{isCreatingPreference ? 'Iniciando pagamento...' : 'Pagar agora e gerar PDF'}</button>
-              <button
-                onClick={async () => {
-                  await proceedFinalize();
-                  setShowPaymentModal(false);
-                }}
-                className="w-full border-2 border-black text-black px-3 py-2 rounded-none hover:bg-black hover:text-white"
-              >Gerar PDF sem pagar agora</button>
             </div>
           </div>
         </div>

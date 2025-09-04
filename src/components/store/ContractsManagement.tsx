@@ -101,6 +101,16 @@ const ContractsManagement = () => {
     await fetchContracts();
   };
 
+  const isPast = (c: ContractItem) => {
+    if (!c.eventDate) return false;
+    const d = new Date(c.eventDate);
+    if (isNaN(d.getTime())) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime() < today.getTime();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -124,7 +134,7 @@ const ContractsManagement = () => {
         {!loading && filtered.length === 0 && <div className="p-4 text-sm text-gray-500">Sin resultados</div>}
         <div className="divide-y">
           {filtered.map(c => (
-            <div key={c.id} className={`grid grid-cols-12 p-3 items-center ${c.eventCompleted ? 'bg-green-50 text-green-800' : ''} ${!c.eventCompleted ? 'text-red-600' : ''}`}>
+            <div key={c.id} className={`grid grid-cols-12 p-3 items-center ${c.eventCompleted ? 'bg-green-50 text-green-800' : ''} ${(!c.eventCompleted && isPast(c)) ? 'text-red-600' : ''}`}>
               <div className="col-span-1">
                 <button onClick={() => setExpanded(e => ({ ...e, [c.id]: !e[c.id] }))} className="border-2 border-black text-black px-2 py-1 rounded-none hover:bg-black hover:text-white inline-flex items-center">
                   {expanded[c.id] ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}
@@ -223,6 +233,22 @@ const ContractsManagement = () => {
                             )}
                           </tbody>
                         </table>
+                      </div>
+                      <div className="mt-2 flex justify-end">
+                        <div className="text-sm font-semibold">
+                          Total: R$ {(() => {
+                            const servicesTotal = (c.services || []).reduce((sum: number, it: any) => {
+                              const qty = Number(it.quantity ?? 1);
+                              const price = Number(String(it.price || '').replace(/[^0-9]/g, ''));
+                              return sum + price * qty;
+                            }, 0);
+                            const storeTotal = Array.isArray(c.storeItems)
+                              ? c.storeItems.reduce((sum: number, it: any) => sum + (Number(it.price || 0) * Number(it.quantity || 1)), 0)
+                              : 0;
+                            const travel = Number(c.travelFee || 0);
+                            return (servicesTotal + storeTotal + travel).toFixed(2);
+                          })()}
+                        </div>
                       </div>
                     </div>
 

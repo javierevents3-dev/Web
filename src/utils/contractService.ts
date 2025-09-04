@@ -22,6 +22,19 @@ export interface ContractData {
   storeItems?: any[];
   message?: string;
   createdAt: string;
+  pdfUrl?: string;
+  formSnapshot?: BookingFormData;
+}
+
+export interface OrderData {
+  clientName: string;
+  clientEmail: string;
+  items: any[];
+  totalAmount: number;
+  status: 'pending' | 'paid' | 'cancelled';
+  paymentMethod: string;
+  contractId?: string;
+  createdAt: string;
 }
 
 export const saveContract = async (formData: BookingFormData): Promise<string> => {
@@ -73,7 +86,26 @@ export const saveContract = async (formData: BookingFormData): Promise<string> =
     };
 
     // Save to Firebase
-    const docRef = await addDoc(collection(db, 'contracts'), contractData);
+    const docRef = await addDoc(collection(db, 'contracts'), {
+      ...contractData,
+      formSnapshot: formData
+    });
+
+    // If there are store items, also create an order record
+    if ((formData.storeItems?.length || 0) > 0) {
+      const orderData: OrderData = {
+        clientName: formData.name,
+        clientEmail: formData.email,
+        items: formData.storeItems || [],
+        totalAmount: storeTotal,
+        status: 'pending',
+        paymentMethod: formData.paymentMethod,
+        contractId: docRef.id,
+        createdAt: new Date().toISOString()
+      };
+      await addDoc(collection(db, 'orders'), orderData);
+    }
+
     return docRef.id;
   } catch (error) {
     console.error('Error saving contract:', error);

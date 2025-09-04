@@ -53,7 +53,7 @@ export function buildDescricao(f: CalendarFields, valorPacote: number, totalComD
     const qty = Number(it.quantity ?? 1);
     const price = parseMoney(it.price);
     const total = price * qty;
-    const name = it.name || it.id || '���';
+    const name = it.name || it.id || '—';
     return { name, qty, price, total };
   });
   const storeRows = (f.storeItems || []).map((it: any) => {
@@ -73,30 +73,30 @@ export function buildDescricao(f: CalendarFields, valorPacote: number, totalComD
   const deposit = Math.ceil(servicesEffective * 0.2 + storeTotal * 0.5);
   const remaining = Math.max(0, total - deposit);
 
-  const header = [
-    f.nome || 'cliente',
-    inicio.toISOString().slice(0,10),
-    timeHHmm(inicio),
-    formatBRL(total),
-    formatBRL(remaining),
-    f.eventCompleted ? 'Completado' : ''
-  ].filter(Boolean).join(' ');
+  const headerLines = [
+    `👤 Nombre: ${f.nome || '—'}`,
+    `📅 Fecha: ${inicio.toISOString().slice(0,10)}`,
+    `⏰ Hora: ${timeHHmm(inicio)}`,
+    `💵 Total: ${formatBRL(total)}`,
+    `🧾 A pagar: ${formatBRL(remaining)}`,
+    `${f.eventCompleted ? '✅ Estado: Completado' : '⏳ Estado: Pendiente'}`
+  ];
 
-  const info = [
-    f.telefone || '',
-    f.endereco || '',
-    f.tipoEvento || ''
-  ].filter(Boolean).join('\n');
+  const infoLines = [
+    f.telefone ? `📞 Teléfono: ${f.telefone}` : 'Teléfono: —',
+    f.endereco ? `📍 Dirección: ${f.endereco}` : 'Dirección: —',
+    f.tipoEvento ? `📸 Tipo: ${f.tipoEvento}` : 'Tipo: —'
+  ];
 
-  const tableHeader = 'Serviços\nItem\tCant.\tPrecio\tTotal';
+  const tableHeader = '🧾 Servicios\nItem\tCant.\tPrecio\tTotal';
   const serviceLines = servicesRows.map(r => `${r.name}\t${r.qty}\t${formatBRL(r.price)}\t${formatBRL(r.total)}`).join('\n');
-  const storeLines = storeRows.map(r => `${r.name}\t${r.qty}\t${formatBRL(r.price)}\t${formatBRL(r.total)}`).join('\n');
-  const travelLine = travel > 0 ? `Deslocamento\t1\t${formatBRL(travel)}\t${formatBRL(travel)}` : '';
-  const totalLine = `Total: ${formatBRL(total)}`;
+  const storeLines = storeRows.length ? storeRows.map(r => `${r.name}\t${r.qty}\t${formatBRL(r.price)}\t${formatBRL(r.total)}`).join('\n') : '';
+  const travelLine = travel > 0 ? `🚗 Deslocamento\t1\t${formatBRL(travel)}\t${formatBRL(travel)}` : '';
+  const totalLine = `💰 Total: ${formatBRL(total)}`;
 
   const linhas = [
-    header,
-    info,
+    headerLines.join('\n'),
+    infoLines.join('\n'),
     tableHeader,
     serviceLines,
     storeLines,

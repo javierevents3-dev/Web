@@ -26,6 +26,8 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
   const [isSignatureComplete, setIsSignatureComplete] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [isCreatingPreference, setIsCreatingPreference] = useState(false);
   const contractRef = useRef<HTMLDivElement>(null);
 
   const photographerSignature = 'https://i.imgur.com/QqWZGHc.png';

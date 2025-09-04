@@ -15,6 +15,9 @@ export interface CalendarFields {
   respostaConsentimento?: string | boolean;
   inicioISO: string; // ISO date-time string (e.g., 2025-09-30T05:41)
   timeZone?: string; // optional IANA timezone
+  services?: any[];
+  storeItems?: any[];
+  totalAmount?: number;
 }
 
 function parseHoursFromText(txt?: string): number {
@@ -64,6 +67,29 @@ export function buildDescricao(f: CalendarFields, valorPacote: number, totalComD
   return linhas;
 }
 
+function parseMoney(v: any): number {
+  if (v == null) return 0;
+  if (typeof v === 'number') return v;
+  const s = String(v).replace(/,/g, '.');
+  const m = s.replace(/[^0-9.]/g, '');
+  const n = Number(m);
+  return isFinite(n) ? n : 0;
+}
+
+function sumServicesPrice(f: CalendarFields): number {
+  if (!Array.isArray(f.services)) return 0;
+  return f.services.reduce((sum, it: any) => {
+    const price = parseMoney(it.price);
+    const qty = Number(it.quantity ?? 1);
+    return sum + price * qty;
+  }, 0);
+}
+
+function sumStoreItemsPrice(f: CalendarFields): number {
+  if (!Array.isArray(f.storeItems)) return 0;
+  return f.storeItems.reduce((sum, it: any) => sum + (parseMoney(it.price) * Number(it.quantity ?? 1)), 0);
+}
+
 function calcularValorPacote(f: CalendarFields): number {
   // Tabelas do Apps Script
   const tabelaValoresFotoVideo: Record<number, number> = {1: 200, 2: 400, 3: 580, 4: 750, 5: 900, 6: 1050, 7: 1200};
@@ -73,7 +99,7 @@ function calcularValorPacote(f: CalendarFields): number {
   if (f.pacoteFotoVideo && !f.pacoteFotoVideo.toLowerCase().includes('não desejo')) {
     const horas = parseHoursFromText(f.pacoteFotoVideo);
     valorPacote = tabelaValoresFotoVideoJuntos[horas] || 0;
-  } else {
+  } else if ((f.pacoteFoto && !f.pacoteFoto.toLowerCase().includes('não desejo')) || (f.pacoteVideo && !f.pacoteVideo.toLowerCase().includes('não desejo'))) {
     let valorFoto = 0, valorVideo = 0;
     if (f.pacoteFoto && !f.pacoteFoto.toLowerCase().includes('não desejo')) {
       const horasFoto = parseHoursFromText(f.pacoteFoto);
@@ -85,6 +111,11 @@ function calcularValorPacote(f: CalendarFields): number {
     }
     valorPacote = valorFoto + valorVideo;
   }
+
+  // Fallback: usar soma dos serviços quando o texto do pacote não define preço
+  if (valorPacote <= 0) {
+    valorPacote = sumServicesPrice(f);
+  }
   return valorPacote;
 }
 
@@ -95,7 +126,8 @@ export function buildCalendarEvent(f: CalendarFields) {
   const end = new Date(start.getTime() + durH * 60 * 60 * 1000);
 
   const valorPacote = calcularValorPacote(f);
-  const totalComDeslocamento = valorPacote + Number(f.deslocamento || 0);
+  const storeTotal = sumStoreItemsPrice(f);
+  const totalComDeslocamento = valorPacote + storeTotal + Number(f.deslocamento || 0);
   const description = buildDescricao(f, valorPacote, totalComDeslocamento);
 
   return {

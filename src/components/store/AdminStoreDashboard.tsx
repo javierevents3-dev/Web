@@ -145,12 +145,18 @@ const AdminStoreDashboard: React.FC<AdminProps> = ({ onNavigate }) => {
     })();
   }, []);
 
+  const salesTotals = useMemo(() => {
+    const services = (allOrders || []).reduce((sum, o) => sum + (o.status === 'completado' ? Number(o.total || 0) : 0), 0);
+    const packages = (contracts || []).reduce((sum, c: any) => sum + (c.eventCompleted ? Number(c.totalAmount || 0) : 0), 0);
+    return { services, packages };
+  }, [allOrders, contracts]);
+
   const statCards = useMemo(() => ([
-    { label: 'Total Productos', value: stats.products, icon: <Package className="text-primary" size={18} /> },
-    { label: 'Órdenes Totales', value: stats.orders, icon: <ClipboardList className="text-green-600" size={18} /> },
+    { label: 'Ventas Serv. Adicionales', value: `R$ ${salesTotals.services.toFixed(0)}` , icon: <DollarSign className="text-amber-500" size={18} /> },
+    { label: 'Ventas Paquetes Foto', value: `R$ ${salesTotals.packages.toFixed(0)}` , icon: <Package className="text-primary" size={18} /> },
     { label: 'Ingresos Totales', value: `$${stats.income}`, icon: <DollarSign className="text-amber-500" size={18} /> },
     { label: 'Nuevos Clientes', value: stats.customers, icon: <Users className="text-fuchsia-500" size={18} /> },
-  ]), [stats]);
+  ]), [salesTotals, stats]);
 
   const nearestContracts = useMemo(() => {
     const today = new Date(); today.setHours(0,0,0,0);

@@ -720,6 +720,63 @@ const ContractPreview = ({ data, onConfirm, onBack }: ContractPreviewProps) => {
       </div>
       </div>
 
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl border border-gray-200 w-full max-w-md p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-medium">Pagar Sinal</h3>
+              <button onClick={() => setShowPaymentModal(false)} className="text-gray-500 hover:text-gray-900">✕</button>
+            </div>
+            <div className="text-sm text-gray-700 space-y-2">
+              <div className="flex justify-between">
+                <span>Valor do Sinal</span>
+                <span className="font-semibold">R$ {payments.deposit.toFixed(2).replace('.', ',')}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Método preferido</span>
+                <span className="font-semibold">{data.paymentMethod === 'cash' ? 'Dinheiro' : data.paymentMethod === 'credit' ? 'Cartão' : 'PIX'}</span>
+              </div>
+            </div>
+            <div className="mt-4 flex flex-col gap-2">
+              <button
+                disabled={isCreatingPreference}
+                onClick={async () => {
+                  try {
+                    setIsCreatingPreference(true);
+                    const preference = await createPreference({
+                      items: [{
+                        title: `Sinal - ${data.name}`,
+                        quantity: 1,
+                        unit_price: Number(payments.deposit.toFixed(2))
+                      }],
+                      external_reference: `${data.email}-${Date.now()}`,
+                      payer: { name: data.name, email: data.email }
+                    });
+                    const url = preference.init_point || preference.sandbox_init_point;
+                    if (url) window.open(url, '_blank');
+                    await proceedFinalize();
+                    setShowPaymentModal(false);
+                  } catch (e) {
+                    console.error('Mercado Pago preference error', e);
+                    alert('Erro ao iniciar pagamento. Configure seu endpoint /api/mercadopago/create-preference.');
+                  } finally {
+                    setIsCreatingPreference(false);
+                  }
+                }}
+                className="w-full border-2 border-black bg-black text-white px-3 py-2 rounded-none hover:opacity-90 disabled:opacity-50"
+              >{isCreatingPreference ? 'Iniciando pagamento...' : 'Pagar agora e gerar PDF'}</button>
+              <button
+                onClick={async () => {
+                  await proceedFinalize();
+                  setShowPaymentModal(false);
+                }}
+                className="w-full border-2 border-black text-black px-3 py-2 rounded-none hover:bg-black hover:text-white"
+              >Gerar PDF sem pagar agora</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Success Modal */}
       {showSuccessModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">

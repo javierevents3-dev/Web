@@ -246,7 +246,7 @@ const AdminStoreDashboard: React.FC<AdminProps> = ({ onNavigate }) => {
         </div>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={computeMonthlyCompare(allOrders, selectedProductId, selectedProductIdB)} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+            <LineChart data={computeMonthlyCompare(allOrders, contracts, selectedProductId, selectedProductIdB)} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis />

@@ -253,7 +253,8 @@ const ContractsManagement = () => {
                               inicioISO,
                               services: Array.isArray(c.services) ? c.services : [],
                               storeItems: Array.isArray(c.storeItems) ? c.storeItems : [],
-                              totalAmount: Number(c.totalAmount || 0)
+                              totalAmount: Number(c.totalAmount || 0),
+                              eventCompleted: Boolean(c.eventCompleted)
                             };
                             const event = buildCalendarEvent(fields);
                             setReservePreview({ fields, event });

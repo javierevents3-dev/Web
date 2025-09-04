@@ -276,7 +276,7 @@ const ContractsManagement = () => {
                         </table>
                       </div>
                       <div className="mt-2 flex justify-end">
-                        <div className="text-sm font-semibold">
+                        <div className="text-sm font-semibold text-green-700">
                           Total: R$ {(() => {
                             const servicesTotal = (c.services || []).reduce((sum: number, it: any) => {
                               const qty = Number(it.quantity ?? 1);

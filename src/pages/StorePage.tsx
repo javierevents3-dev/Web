@@ -227,14 +227,14 @@ const StorePage = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {products.map(product => (
-                    <div key={product.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    <div key={product.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden h-full flex flex-col">
                       <div className="relative">
                         <img src={product.image_url} alt={product.name} className="w-full h-44 object-cover" />
                         {(product as any).active === false && (
                           <span className="absolute top-2 left-2 text-xs px-2 py-1 rounded bg-gray-200 text-gray-700">inactivo</span>
                         )}
                       </div>
-                      <div className="p-4">
+                      <div className="p-4 flex flex-col h-full">
                         <div className="flex items-start justify-between gap-3">
                           <h3 className="font-semibold">{product.name}</h3>
                           <span className="text-primary font-bold">${Number(product.price).toFixed(0)}</span>
@@ -245,7 +245,11 @@ const StorePage = () => {
                         </div>
                         <div className="mt-4 flex items-center gap-2">
                           <button onClick={() => { setEditingProduct(product); setEditorOpen(true); }} className="flex-1 border-2 border-black text-black px-3 py-2 rounded-none hover:bg-black hover:text-white">Editar</button>
-                          <button onClick={() => handleDeactivate(product.id, (product as any).active === false ? true : false)} className="flex-1 border-2 border-black text-black px-3 py-2 rounded-none hover:bg-black hover:text-white">{(product as any).active === false ? 'Activar' : 'Desactivar'}</button>
+                          <button onClick={() => handleDeactivate(product.id, (product as any).active === false ? true : false)} className={`flex-1 border-2 border-black px-3 py-2 rounded-none ${
+  (product as any).active === false
+    ? 'bg-white text-black hover:bg-black hover:text-white'
+    : 'bg-black text-white hover:opacity-90'
+}`}>{(product as any).active === false ? 'Activar' : 'Desactivar'}</button>
                           <button onClick={() => handleDeleteProduct(product.id)} className="border-2 border-black text-black px-3 py-2 rounded hover:bg-black hover:text-white"><Trash2 size={16} /></button>
                         </div>
                       </div>
@@ -287,14 +291,14 @@ const StorePage = () => {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {products.map(product => (
-                      <div key={product.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                      <div key={product.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden h-full flex flex-col">
                         <div className="relative">
                           <img src={product.image_url} alt={product.name} className="w-full h-44 object-cover" />
                           {(product as any).active === false && (
                             <span className="absolute top-2 left-2 text-xs px-2 py-1 rounded bg-gray-200 text-gray-700">inactivo</span>
                           )}
                         </div>
-                        <div className="p-4">
+                        <div className="p-4 flex flex-col h-full">
                           <div className="flex items-start justify-between gap-3">
                             <h3 className="font-semibold">{product.name}</h3>
                             <span className="text-primary font-bold">${Number(product.price).toFixed(0)}</span>
@@ -305,7 +309,11 @@ const StorePage = () => {
                           </div>
                           <div className="mt-4 flex items-center gap-2">
                             <button onClick={() => { setEditingProduct(product); setEditorOpen(true); }} className="flex-1 border-2 border-black text-black px-3 py-2 rounded-none hover:bg-black hover:text-white">Editar</button>
-                            <button onClick={() => handleDeactivate(product.id, (product as any).active === false ? true : false)} className="flex-1 border-2 border-black text-black px-3 py-2 rounded-none hover:bg-black hover:text-white">{(product as any).active === false ? 'Activar' : 'Desactivar'}</button>
+                            <button onClick={() => handleDeactivate(product.id, (product as any).active === false ? true : false)} className={`flex-1 border-2 border-black px-3 py-2 rounded-none ${
+  (product as any).active === false
+    ? 'bg-white text-black hover:bg-black hover:text-white'
+    : 'bg-black text-white hover:opacity-90'
+}`}>{(product as any).active === false ? 'Activar' : 'Desactivar'}</button>
                             <button onClick={() => handleDeleteProduct(product.id)} className="border-2 border-black text-black px-3 py-2 rounded hover:bg-black hover:text-white"><Trash2 size={16} /></button>
                           </div>
                         </div>

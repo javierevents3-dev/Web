@@ -243,7 +243,7 @@ const StorePage = () => {
                         <div className="mt-3 flex items-center gap-2 text-xs text-gray-600">
                           <span className="px-2 py-1 bg-gray-100 rounded">{product.category || 'General'}</span>
                         </div>
-                        <div className="mt-4 flex items-center gap-2">
+                        <div className="mt-4 flex items-center gap-2 mt-auto">
                           <button onClick={() => { setEditingProduct(product); setEditorOpen(true); }} className="flex-1 border-2 border-black text-black px-3 py-2 rounded-none hover:bg-black hover:text-white">Editar</button>
                           <button onClick={() => handleDeactivate(product.id, (product as any).active === false ? true : false)} className={`flex-1 border-2 border-black px-3 py-2 rounded-none ${
   (product as any).active === false
@@ -307,7 +307,7 @@ const StorePage = () => {
                           <div className="mt-3 flex items-center gap-2 text-xs text-gray-600">
                             <span className="px-2 py-1 bg-gray-100 rounded">{product.category || 'General'}</span>
                           </div>
-                          <div className="mt-4 flex items-center gap-2">
+                          <div className="mt-4 flex items-center gap-2 mt-auto">
                             <button onClick={() => { setEditingProduct(product); setEditorOpen(true); }} className="flex-1 border-2 border-black text-black px-3 py-2 rounded-none hover:bg-black hover:text-white">Editar</button>
                             <button onClick={() => handleDeactivate(product.id, (product as any).active === false ? true : false)} className={`flex-1 border-2 border-black px-3 py-2 rounded-none ${
   (product as any).active === false

@@ -180,7 +180,7 @@ const EventsPage = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {weddingPackages.map((pkg) => (
-              <div key={pkg.id} className="card flex flex col h-full relative">
+              <div key={pkg.id} className="card flex flex-col h-full relative">
                 {user && dbEvents && (
                   <button
                     className="absolute top-2 right-2 p-2 rounded-full bg-white shadow hover:bg-gray-50"

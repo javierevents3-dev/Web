@@ -231,7 +231,7 @@ const ClientDashboardPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 py-12 pt-32">
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div className="card mb-8">
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-3xl font-playfair mb-2">

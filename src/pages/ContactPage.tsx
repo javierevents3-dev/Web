@@ -75,7 +75,7 @@ const ContactPage = () => {
                 <div>
                   <h3 className="font-medium text-lg mb-1">Telefone</h3>
                   <p className="text-gray-600">
-                    <a href="tel:+5541984875565" className="hover:text-secondary transition-colors">
+                    <a href="tel:+5541984875565" className="link-luxe">
                       +55 41 98487-5565
                     </a>
                   </p>
@@ -91,7 +91,7 @@ const ContactPage = () => {
                       href="https://wa.me/5541984875565" 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="hover:text-secondary transition-colors"
+                      className="link-luxe"
                     >
                       Enviar mensagem direta
                     </a>
@@ -125,7 +125,7 @@ const ContactPage = () => {
             </div>
           </div>
           
-          <div className="bg-white shadow-md p-8">
+          <div className="card">
             <h2 className="text-2xl font-playfair mb-6">Enviar Mensagem via WhatsApp</h2>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
@@ -139,7 +139,7 @@ const ContactPage = () => {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
+                  className="input-base"
                 />
               </div>
               
@@ -154,7 +154,7 @@ const ContactPage = () => {
                   value={formData.phone}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
+                  className="input-base"
                 />
               </div>
               
@@ -169,7 +169,7 @@ const ContactPage = () => {
                   value={formData.subject}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
+                  className="input-base"
                 />
               </div>
               
@@ -184,7 +184,7 @@ const ContactPage = () => {
                   onChange={handleChange}
                   rows={5}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
+                  className="input-base"
                 />
               </div>
               

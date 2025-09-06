@@ -68,7 +68,7 @@ const FeaturedSessions = () => {
           {sessionPackages.map((pkg, index) => (
             <div 
               key={pkg.id} 
-              className={`bg-white shadow-md p-6 flex flex-col h-full slide-up delay-${index + 1}`}
+              className={`card flex flex-col h-full slide-up delay-${index + 1}`}
             >
               <div className="h-56 overflow-hidden mb-4">
                 <img 

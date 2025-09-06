@@ -74,6 +74,20 @@
   .page-section {
     @apply pt-32 pb-16;
   }
+
+  .card {
+    @apply bg-white rounded-xl border border-gray-200 p-6 md:p-8 shadow-sm transition-shadow;
+  }
+  .card:hover {
+    @apply shadow-md ring-1 ring-secondary/30;
+  }
+  .input-base {
+    @apply w-full px-4 py-3 border-2 rounded-none focus:outline-none focus:ring-2 focus:ring-secondary;
+    border-color: #000000 !important;
+  }
+  .link-luxe {
+    @apply text-primary underline underline-offset-4 decoration-secondary/50 hover:text-secondary transition-colors;
+  }
 }
 
 /* Animations */

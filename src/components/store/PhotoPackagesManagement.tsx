@@ -110,16 +110,12 @@ const PhotoPackagesManagement = () => {
     await load();
   };
 
-  const handleImportFromData = async () => {
-    if (!confirm('Esto eliminará todos los paquetes actuales y los reemplazará por los paquetes predefinidos. ¿Continuar?')) return;
+  const importFromDataCore = async () => {
     setLoading(true);
     try {
-      // borrar existentes
       const snap = await getDocs(collection(db, 'packages'));
       await Promise.all(snap.docs.map(d => deleteDoc(doc(db, 'packages', d.id))));
-      // crear nuevos
       const toCreate: Array<Omit<DBPackage, 'id' | 'created_at'>> = [] as any;
-      // sesiones (portrait)
       for (const s of sessionPackages) {
         toCreate.push({
           type: 'portrait',
@@ -132,7 +128,6 @@ const PhotoPackagesManagement = () => {
           category: 'portrait',
         } as any);
       }
-      // maternidad
       for (const m of maternityPackages) {
         toCreate.push({
           type: 'maternity',
@@ -145,7 +140,6 @@ const PhotoPackagesManagement = () => {
           category: 'maternity',
         } as any);
       }
-      // eventos
       for (const e of eventPackages) {
         const cat = e.id.split('-')[0];
         toCreate.push({
@@ -163,14 +157,30 @@ const PhotoPackagesManagement = () => {
         await createPackage({ ...c });
       }
       await load();
-      alert('Paquetes importados correctamente');
+      return true;
     } catch (e) {
       console.error(e);
-      alert('Error al importar paquetes');
+      return false;
     } finally {
       setLoading(false);
     }
   };
+
+  const handleImportFromData = async () => {
+    if (!confirm('Esto eliminará todos los paquetes actuales y los reemplazará por los paquetes predefinidos. ¿Continuar?')) return;
+    const ok = await importFromDataCore();
+    if (ok) alert('Paquetes importados correctamente'); else alert('Error al importar paquetes');
+  };
+
+  useEffect(() => {
+    (async () => {
+      if (localStorage.getItem('packages_imported_from_data')) return;
+      const ok = await importFromDataCore();
+      if (ok) {
+        localStorage.setItem('packages_imported_from_data', '1');
+      }
+    })();
+  }, []);
 
   return (
     <div>

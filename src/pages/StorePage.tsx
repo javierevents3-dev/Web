@@ -28,33 +28,6 @@ const StorePage = () => {
     fetchProducts();
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        if (localStorage.getItem('products_deduped')) return;
-        const colRef = collection(db, 'products');
-        const snap = await getDocs(colRef);
-        const all = snap.docs.map(d => ({ id: d.id, ...(d.data() as any) })) as StoreProduct[];
-        const seen = new Map<string, string>();
-        const toDelete: string[] = [];
-        for (const p of all) {
-          const key = `${String(p.name||'').trim().toLowerCase()}|${Number(p.price)||0}`;
-          if (seen.has(key)) {
-            toDelete.push(p.id);
-          } else {
-            seen.set(key, p.id);
-          }
-        }
-        if (toDelete.length) {
-          await Promise.all(toDelete.map(id => deleteDoc(doc(db, 'products', id))));
-          await fetchProducts();
-        }
-        localStorage.setItem('products_deduped', '1');
-      } catch (_) {
-        // ignore
-      }
-    })();
-  }, []);
 
   useEffect(() => {
     const seedIfEmpty = async () => {
@@ -111,8 +84,14 @@ const StorePage = () => {
       let q: any = col;
       try { q = query(col, orderBy('created_at', 'desc')); } catch (_) { q = col; }
       const snap = await getDocs(q);
-      const data = snap.docs.map(d => ({ id: d.id, ...(d.data() as any) })) as StoreProduct[];
-      setProducts(data || []);
+      const raw = snap.docs.map(d => ({ id: d.id, ...(d.data() as any) })) as StoreProduct[];
+      const seen = new Set<string>();
+      const unique: StoreProduct[] = [];
+      for (const p of raw) {
+        const key = `${String(p.name||'').trim().toLowerCase()}|${Number(p.price)||0}|${String(p.category||'').trim().toLowerCase()}`;
+        if (!seen.has(key)) { seen.add(key); unique.push(p); }
+      }
+      setProducts(unique);
     } catch (error) {
       console.warn('Não foi possível carregar produtos no momento.');
       setProducts([]);
@@ -258,7 +237,7 @@ const StorePage = () => {
                       if (!confirm('Buscar y eliminar productos duplicados por nombre y precio?')) return;
                       const seen = new Map<string, string>();
                       for (const p of products) {
-                        const key = `${String(p.name||'').trim().toLowerCase()}|${Number(p.price)||0}`;
+                        const key = `${String(p.name||'').trim().toLowerCase()}|${Number(p.price)||0}|${String(p.category||'').trim().toLowerCase()}`;
                         if (seen.has(key)) {
                           try { await deleteDoc(doc(db, 'products', p.id)); } catch {}
                         } else {
@@ -341,7 +320,7 @@ const StorePage = () => {
                       if (!confirm('Buscar y eliminar productos duplicados por nombre y precio?')) return;
                       const seen = new Map<string, string>();
                       for (const p of products) {
-                        const key = `${String(p.name||'').trim().toLowerCase()}|${Number(p.price)||0}`;
+                        const key = `${String(p.name||'').trim().toLowerCase()}|${Number(p.price)||0}|${String(p.category||'').trim().toLowerCase()}`;
                         if (seen.has(key)) {
                           try { await deleteDoc(doc(db, 'products', p.id)); } catch {}
                         } else {

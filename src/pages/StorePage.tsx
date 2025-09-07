@@ -7,6 +7,7 @@ import { useCart } from '../contexts/CartContext';
 import ProductEditorModal from '../components/store/ProductEditorModal';
 import AdminStoreDashboard from '../components/store/AdminStoreDashboard';
 import OrdersManagement from '../components/store/OrdersManagement';
+import PhotoPackagesManagement from '../components/store/PhotoPackagesManagement';
 import ContractsManagement from '../components/store/ContractsManagement';
 
 interface StoreProduct extends Product {

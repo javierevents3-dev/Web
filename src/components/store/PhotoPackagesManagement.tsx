@@ -151,6 +151,24 @@ const PhotoPackagesManagement = () => {
         <h2 className="section-title">Gestión de Paquetes</h2>
         <div className="flex items-center gap-2">
           <button onClick={load} className="px-4 py-2 border-2 border-black text-black rounded-none hover:bg-black hover:text-white flex items-center gap-2"><RefreshCcw size={16}/>Recargar</button>
+          <button onClick={async () => {
+            if (!confirm('Eliminar paquetes duplicados por (tipo + título + precio + duración)?')) return;
+            const snap = await getDocs(collection(db, 'packages'));
+            const all = snap.docs.map(d => ({ id: d.id, ...(d.data() as any) })) as DBPackage[];
+            const seen = new Map<string, string>();
+            const toDelete: string[] = [];
+            for (const p of all) {
+              const key = `${p.type}|${(p.title||'').trim().toLowerCase()}|${Number(p.price)||0}|${(p.duration||'').trim().toLowerCase()}`;
+              if (seen.has(key)) {
+                toDelete.push(p.id);
+              } else {
+                seen.set(key, p.id);
+              }
+            }
+            await Promise.all(toDelete.map(id => deleteDoc(doc(db, 'packages', id))));
+            await load();
+            alert(`Eliminados ${toDelete.length} duplicados`);
+          }} className="px-4 py-2 border-2 border-black text-black rounded-none hover:bg-black hover:text-white">Eliminar Duplicados</button>
           <button onClick={handleImportFromData} className="px-4 py-2 border-2 border-black text-black rounded-none hover:bg-black hover:text-white">Importar de Datos</button>
           <button onClick={handleCreate} className="px-4 py-2 border-2 border-black text-black rounded-none hover:bg-black hover:text-white flex items-center gap-2"><Plus size={16}/>Nuevo</button>
         </div>

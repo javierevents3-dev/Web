@@ -40,7 +40,7 @@ const EventsPage = () => {
 
   // Separar pacotes por tipo sem duplicar
   const preWeddingPackages = (dbEvents && dbEvents.length > 0
-    ? dbEvents.filter(p => (p.category || '').startsWith('prewedding') || p.id.startsWith('prewedding')).map(p => ({
+    ? dbEvents.filter(p => (p as any).active !== false && ((p.category || '').startsWith('prewedding') || p.id.startsWith('prewedding'))).map(p => ({
         id: p.id,
         title: p.title,
         price: `R$ ${Number(p.price).toFixed(2).replace('.', ',')}`,

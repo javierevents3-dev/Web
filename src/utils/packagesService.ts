@@ -28,12 +28,22 @@ export interface DBPackage {
   active?: boolean;
 }
 
+const dedupePackages = (items: DBPackage[]): DBPackage[] => {
+  const byKey = new Map<string, DBPackage>();
+  for (const p of items) {
+    const key = `${p.type}|${String(p.title || '').trim().toLowerCase()}|${Number((p as any).price) || 0}|${String(p.duration || '').trim().toLowerCase()}`;
+    if (!byKey.has(key)) byKey.set(key, p);
+  }
+  return Array.from(byKey.values());
+};
+
 export const fetchPackages = async (type?: PackageType): Promise<DBPackage[]> => {
   const col = collection(db, 'packages');
   let q = type ? query(col, where('type', '==', type), orderBy('created_at', 'desc')) : query(col, orderBy('created_at', 'desc'));
   try {
     const snap = await getDocs(q);
-    return snap.docs.map(d => ({ id: d.id, ...(d.data() as Omit<DBPackage, 'id'>) }));
+    const arr = snap.docs.map(d => ({ id: d.id, ...(d.data() as Omit<DBPackage, 'id'>) }));
+    return dedupePackages(arr);
   } catch (e: any) {
     const msg = String(e?.message || '');
     const code = String(e?.code || '');
@@ -42,7 +52,8 @@ export const fetchPackages = async (type?: PackageType): Promise<DBPackage[]> =>
       try {
         const q2 = type ? query(col, where('type', '==', type)) : query(col);
         const snap2 = await getDocs(q2);
-        return snap2.docs.map(d => ({ id: d.id, ...(d.data() as Omit<DBPackage, 'id'>) }));
+        const arr2 = snap2.docs.map(d => ({ id: d.id, ...(d.data() as Omit<DBPackage, 'id'>) }));
+        return dedupePackages(arr2);
       } catch (e2) {
         console.warn('fetchPackages fallback failed', e2);
         return [];

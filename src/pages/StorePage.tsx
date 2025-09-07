@@ -361,6 +361,7 @@ const StorePage = () => {
               )}
               {adminView === 'orders' && <OrdersManagement />}
               {adminView === 'contracts' && <ContractsManagement />}
+              {adminView === 'packages' && <PhotoPackagesManagement />}
             </div>
           </div>
         )}

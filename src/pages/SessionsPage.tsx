@@ -40,7 +40,7 @@ const SessionsPage = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {sessionPackages.map((pkg) => (
-              <div key={pkg.id} className="bg-white shadow-md p-6 flex flex-col h-full">
+              <div key={pkg.id} className="card flex flex-col h-full">
                 <div className="h-56 overflow-hidden mb-4">
                   <img 
                     src={pkg.image} 

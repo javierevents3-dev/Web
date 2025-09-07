@@ -164,7 +164,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Form */}
           <div className="lg:col-span-2">
-            <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-8 space-y-8">
+            <form onSubmit={handleSubmit} className="bg-white shadow-md p-8 space-y-8">
               {/* Personal Information */}
               <section>
                 <h2 className="text-xl font-medium mb-6 pb-2 border-b">Informações Pessoais</h2>
@@ -178,7 +178,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary ${
+                      className={`input-base focus:outline-none focus:ring-2 focus:ring-secondary ${
                         errors.name ? 'border-red-500' : 'border-gray-300'
                       }`}
                       placeholder="Seu nome completo"
@@ -195,7 +195,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
                       name="cpf"
                       value={formData.cpf}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary ${
+                      className={`input-base focus:outline-none focus:ring-2 focus:ring-secondary ${
                         errors.cpf ? 'border-red-500' : 'border-gray-300'
                       }`}
                       placeholder="000.000.000-00"
@@ -212,7 +212,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
                       name="rg"
                       value={formData.rg}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary ${
+                      className={`input-base focus:outline-none focus:ring-2 focus:ring-secondary ${
                         errors.rg ? 'border-red-500' : 'border-gray-300'
                       }`}
                       placeholder="00.000.000-0"
@@ -229,7 +229,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
                       name="address"
                       value={formData.address}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary ${
+                      className={`input-base focus:outline-none focus:ring-2 focus:ring-secondary ${
                         errors.address ? 'border-red-500' : 'border-gray-300'
                       }`}
                       placeholder="Rua, número, bairro, cidade, CEP"
@@ -246,7 +246,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary ${
+                      className={`input-base focus:outline-none focus:ring-2 focus:ring-secondary ${
                         errors.email ? 'border-red-500' : 'border-gray-300'
                       }`}
                       placeholder="seu@email.com"
@@ -263,7 +263,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary ${
+                      className={`input-base focus:outline-none focus:ring-2 focus:ring-secondary ${
                         errors.phone ? 'border-red-500' : 'border-gray-300'
                       }`}
                       placeholder="(00) 00000-0000"
@@ -294,7 +294,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
                         <input
                           type="text"
                           value={item.type === 'events' ? 'Eventos' : item.type === 'portrait' ? 'Retratos' : item.type === 'maternity' ? 'Gestantes' : item.type}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
+                          className="input-base bg-gray-50"
                           disabled
                         />
                       </div>
@@ -306,7 +306,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
                         <input
                           type="text"
                           value={`${item.name} - ${item.price}`}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
+                          className="input-base bg-gray-50"
                           disabled
                         />
                       </div>
@@ -318,7 +318,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
                         <input
                           type="text"
                           value={item.duration}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
+                          className="input-base bg-gray-50"
                           disabled
                         />
                       </div>
@@ -330,7 +330,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
                         <input
                           type="text"
                           value={`${item.quantity} ${item.quantity === 1 ? 'sessão' : 'sessões'}`}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
+                          className="input-base bg-gray-50"
                           disabled
                         />
                       </div>
@@ -345,7 +345,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
                           value={formData[`date_${index}`] || ''}
                           onChange={(e) => setFormData(prev => ({ ...prev, [`date_${index}`]: e.target.value }))}
                           min={getCurrentDateTime().date}
-                          className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary ${
+                          className={`input-base focus:outline-none focus:ring-2 focus:ring-secondary ${
                             errors[`date_${index}`] ? 'border-red-500' : 'border-gray-300'
                           }`}
                         />
@@ -361,7 +361,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
                           name={`time_${index}`}
                           value={formData[`time_${index}`] || ''}
                           onChange={(e) => setFormData(prev => ({ ...prev, [`time_${index}`]: e.target.value }))}
-                          className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary ${
+                          className={`input-base focus:outline-none focus:ring-2 focus:ring-secondary ${
                             errors[`time_${index}`] ? 'border-red-500' : 'border-gray-300'
                           }`}
                         />
@@ -375,7 +375,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
                             href="https://maps.google.com" 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="ml-2 text-blue-600 hover:text-blue-800 text-sm underline"
+                            className="ml-2 link-luxe text-sm"
                           >
                             (Buscar no Google Maps)
                           </a>
@@ -385,7 +385,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
                           name={`eventLocation_${index}`}
                           value={formData[`eventLocation_${index}`] || ''}
                           onChange={(e) => setFormData(prev => ({ ...prev, [`eventLocation_${index}`]: e.target.value }))}
-                          className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary ${
+                          className={`input-base focus:outline-none focus:ring-2 focus:ring-secondary ${
                             errors[`eventLocation_${index}`] ? 'border-red-500' : 'border-gray-300'
                           }`}
                           placeholder="Endereço completo do evento ou link do Google Maps"
@@ -407,7 +407,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
                         name={`discountCoupon_${index}`}
                         value={formData[`discountCoupon_${index}`] || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, [`discountCoupon_${index}`]: e.target.value }))}
-                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary ${
+                        className={`input-base focus:outline-none focus:ring-2 focus:ring-secondary ${
                           (() => {
                             const coupon = formData[`discountCoupon_${index}`];
                             if (!coupon || coupon.trim() === '') {
@@ -453,7 +453,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
                 (!formData.storeItems || formData.storeItems.length === 0) ? (
                   <section>
                     <h2 className="text-xl font-medium mb-6 pb-2 border-b">Informações do Serviço</h2>
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div className="bg-yellow-50 border border-yellow-200 p-4">
                       <p className="text-yellow-800">Nenhum serviço selecionado. Por favor, adicione serviços ao carrinho primeiro.</p>
                     </div>
                   </section>
@@ -464,7 +464,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
               {formData.storeItems && formData.storeItems.length > 0 && (
                 <section>
                   <h2 className="text-xl font-medium mb-6 pb-2 border-b">Serviços adicionais contratados</h2>
-                  <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                  <div className="bg-gray-50 p-6 border border-gray-200">
                     <div className="space-y-3">
                       {formData.storeItems.map((item, index) => (
                         <div key={`store-form-${index}`} className="flex justify-between text-sm">
@@ -491,7 +491,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
                         name="travelCost"
                         value={formData.travelCost}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary"
+                        className="input-base focus:outline-none focus:ring-2 focus:ring-secondary"
                         placeholder="0"
                         min="0"
                       />
@@ -506,7 +506,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
                       name="paymentMethod"
                       value={formData.paymentMethod}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary"
+                      className="input-base focus:outline-none focus:ring-2 focus:ring-secondary"
                     >
                       <option value="pix">PIX</option>
                       <option value="credit">Cartão de Crédito</option>
@@ -544,14 +544,14 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
                           }
                         }}
                       >
-                        <div className="aspect-square overflow-hidden rounded-lg">
+                        <div className="aspect-square overflow-hidden">
                           <img 
                             src={dress.image} 
                             alt={dress.name}
                             className="w-full h-full object-cover"
                           />
                         </div>
-                        <div className={`absolute inset-0 rounded-lg border-2 ${
+                        <div className={`absolute inset-0 border-2 ${
                           formData.selectedDresses.includes(dress.id)
                             ? 'border-green-500 bg-black/20'
                             : 'border-transparent'
@@ -586,7 +586,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ initialData, packages, onSubm
                     value={formData.message}
                     onChange={handleInputChange}
                     rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary"
+                    className="input-base focus:outline-none focus:ring-2 focus:ring-secondary"
                     placeholder="Informações adicionais sobre o evento..."
                   />
                 </div>

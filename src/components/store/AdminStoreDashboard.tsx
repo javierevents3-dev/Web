@@ -226,6 +226,7 @@ const AdminStoreDashboard: React.FC<AdminProps> = ({ onNavigate }) => {
                 <div>
                   <p className="font-medium lowercase first-letter:uppercase">{c.clientName || 'cliente'}</p>
                   <p className="text-xs text-gray-500">{c.eventDate ? new Date(c.eventDate).toLocaleDateString() : (c.contractDate ? new Date(c.contractDate).toLocaleDateString() : '')}</p>
+                  <p className="text-xs text-gray-600">Evento: {c.eventType || '-'}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-semibold">R$ {Number(c.totalAmount || 0).toFixed(0)}</span>

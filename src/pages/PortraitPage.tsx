@@ -124,8 +124,8 @@ const PortraitPage = () => {
                   __db: p as DBPackage
                 }))
               : portraitPackagesFallback
-            ).map((pkg: any) => (
-              <div key={pkg.id} className="bg-white shadow-md p-6 flex flex-col h-full relative">
+            ).filter((p: any) => (p as any)?.__db ? ((p as any).__db.active ?? true) : true).map((pkg: any) => (
+              <div key={pkg.id} className="card flex flex-col h-full relative">
                 {user && pkg.__db && (
                   <button
                     className="absolute top-2 right-2 p-2 rounded-full bg-white shadow hover:bg-gray-50"

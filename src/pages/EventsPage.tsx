@@ -40,7 +40,7 @@ const EventsPage = () => {
 
   // Separar pacotes por tipo sem duplicar
   const preWeddingPackages = (dbEvents && dbEvents.length > 0
-    ? dbEvents.filter(p => (p.category || '').startsWith('prewedding') || p.id.startsWith('prewedding')).map(p => ({
+    ? dbEvents.filter(p => (p as any).active !== false && ((p.category || '').startsWith('prewedding') || p.id.startsWith('prewedding'))).map(p => ({
         id: p.id,
         title: p.title,
         price: `R$ ${Number(p.price).toFixed(2).replace('.', ',')}`,
@@ -53,7 +53,7 @@ const EventsPage = () => {
   );
 
   const weddingPackages = (dbEvents && dbEvents.length > 0
-    ? dbEvents.filter(p => (p.category || '').startsWith('wedding') || p.id.startsWith('wedding')).map(p => ({
+    ? dbEvents.filter(p => (p as any).active !== false && ((p.category || '').startsWith('wedding') || p.id.startsWith('wedding'))).map(p => ({
         id: p.id,
         title: p.title,
         price: `R$ ${Number(p.price).toFixed(2).replace('.', ',')}`,
@@ -180,7 +180,7 @@ const EventsPage = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {weddingPackages.map((pkg) => (
-              <div key={pkg.id} className="bg-white shadow-md p-6 flex flex-col h-full relative">
+              <div key={pkg.id} className="card flex flex-col h-full relative">
                 {user && dbEvents && (
                   <button
                     className="absolute top-2 right-2 p-2 rounded-full bg-white shadow hover:bg-gray-50"

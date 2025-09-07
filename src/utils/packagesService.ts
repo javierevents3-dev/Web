@@ -55,7 +55,7 @@ export const fetchPackages = async (type?: PackageType): Promise<DBPackage[]> =>
 
 export const createPackage = async (pkg: Omit<DBPackage, 'id' | 'created_at'>) => {
   try {
-    await addDoc(collection(db, 'packages'), { ...pkg, created_at: new Date().toISOString() });
+    await addDoc(collection(db, 'packages'), { active: true, ...pkg, created_at: new Date().toISOString() });
   } catch (e) {
     console.error('createPackage (firebase) failed', e);
     throw e;

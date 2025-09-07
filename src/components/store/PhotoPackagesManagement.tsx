@@ -42,32 +42,6 @@ const PhotoPackagesManagement = () => {
 
   useEffect(() => { load(); }, []);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        if (localStorage.getItem('packages_deduped')) return;
-        const snap = await getDocs(collection(db, 'packages'));
-        const all = snap.docs.map(d => ({ id: d.id, ...(d.data() as any) })) as DBPackage[];
-        const seen = new Map<string, string>();
-        const toDelete: string[] = [];
-        for (const p of all) {
-          const key = `${p.type}|${(p.title||'').trim().toLowerCase()}|${Number(p.price)||0}|${(p.duration||'').trim().toLowerCase()}`;
-          if (seen.has(key)) {
-            toDelete.push(p.id);
-          } else {
-            seen.set(key, p.id);
-          }
-        }
-        if (toDelete.length) {
-          await Promise.all(toDelete.map(id => deleteDoc(doc(db, 'packages', id))));
-          await load();
-        }
-        localStorage.setItem('packages_deduped', '1');
-      } catch (_) {
-        // ignore
-      }
-    })();
-  }, []);
 
   const handleCreate = async () => {
     const title = prompt('Título del paquete:');
@@ -172,15 +146,6 @@ const PhotoPackagesManagement = () => {
     if (ok) alert('Paquetes importados correctamente'); else alert('Error al importar paquetes');
   };
 
-  useEffect(() => {
-    (async () => {
-      if (localStorage.getItem('packages_imported_from_data')) return;
-      const ok = await importFromDataCore();
-      if (ok) {
-        localStorage.setItem('packages_imported_from_data', '1');
-      }
-    })();
-  }, []);
 
   return (
     <div>
@@ -195,15 +160,17 @@ const PhotoPackagesManagement = () => {
             const seen = new Map<string, string>();
             const toDelete: string[] = [];
             for (const p of all) {
-              const key = `${p.type}|${(p.title||'').trim().toLowerCase()}|${Number(p.price)||0}|${(p.duration||'').trim().toLowerCase()}`;
+              const key = `${p.type}|${String(p.title||'').trim().toLowerCase()}|${Number(p.price)||0}|${String(p.duration||'').trim().toLowerCase()}`;
               if (seen.has(key)) {
                 toDelete.push(p.id);
               } else {
                 seen.set(key, p.id);
               }
             }
-            await Promise.all(toDelete.map(id => deleteDoc(doc(db, 'packages', id))));
-            await load();
+            if (toDelete.length) {
+              await Promise.all(toDelete.map(id => deleteDoc(doc(db, 'packages', id))));
+              await load();
+            }
             alert(`Eliminados ${toDelete.length} duplicados`);
           }} className="px-4 py-2 border-2 border-black text-black rounded-none hover:bg-black hover:text-white">Eliminar Duplicados</button>
           <button onClick={handleImportFromData} className="px-4 py-2 border-2 border-black text-black rounded-none hover:bg-black hover:text-white">Importar de Datos</button>

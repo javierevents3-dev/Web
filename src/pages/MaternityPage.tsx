@@ -118,7 +118,7 @@ const MaternityPage = () => {
                 __db: p as DBPackage
               }))
               : maternityPackages
-            ).map((pkg: any) => (
+            ).filter((p: any) => (p as any)?.__db ? ((p as any).__db.active ?? true) : true).map((pkg: any) => (
               <div key={pkg.id} className="card flex flex-col h-full relative">
                 {user && pkg.__db && (
                   <button

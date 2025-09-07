@@ -53,7 +53,7 @@ const EventsPage = () => {
   );
 
   const weddingPackages = (dbEvents && dbEvents.length > 0
-    ? dbEvents.filter(p => (p.category || '').startsWith('wedding') || p.id.startsWith('wedding')).map(p => ({
+    ? dbEvents.filter(p => (p as any).active !== false && ((p.category || '').startsWith('wedding') || p.id.startsWith('wedding'))).map(p => ({
         id: p.id,
         title: p.title,
         price: `R$ ${Number(p.price).toFixed(2).replace('.', ',')}`,

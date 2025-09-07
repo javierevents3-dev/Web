@@ -29,6 +29,34 @@ const StorePage = () => {
   }, []);
 
   useEffect(() => {
+    (async () => {
+      try {
+        if (localStorage.getItem('products_deduped')) return;
+        const colRef = collection(db, 'products');
+        const snap = await getDocs(colRef);
+        const all = snap.docs.map(d => ({ id: d.id, ...(d.data() as any) })) as StoreProduct[];
+        const seen = new Map<string, string>();
+        const toDelete: string[] = [];
+        for (const p of all) {
+          const key = `${String(p.name||'').trim().toLowerCase()}|${Number(p.price)||0}`;
+          if (seen.has(key)) {
+            toDelete.push(p.id);
+          } else {
+            seen.set(key, p.id);
+          }
+        }
+        if (toDelete.length) {
+          await Promise.all(toDelete.map(id => deleteDoc(doc(db, 'products', id))));
+          await fetchProducts();
+        }
+        localStorage.setItem('products_deduped', '1');
+      } catch (_) {
+        // ignore
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
     const seedIfEmpty = async () => {
       if (typeof navigator !== 'undefined' && !navigator.onLine) return;
       if (products.length === 0 && !localStorage.getItem('seeded_products')) {

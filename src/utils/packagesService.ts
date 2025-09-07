@@ -25,6 +25,7 @@ export interface DBPackage {
   image_url: string;
   category?: string; // e.g., 'wedding', 'prewedding'
   created_at?: string;
+  active?: boolean;
 }
 
 export const fetchPackages = async (type?: PackageType): Promise<DBPackage[]> => {

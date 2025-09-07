@@ -42,6 +42,33 @@ const PhotoPackagesManagement = () => {
 
   useEffect(() => { load(); }, []);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        if (localStorage.getItem('packages_deduped')) return;
+        const snap = await getDocs(collection(db, 'packages'));
+        const all = snap.docs.map(d => ({ id: d.id, ...(d.data() as any) })) as DBPackage[];
+        const seen = new Map<string, string>();
+        const toDelete: string[] = [];
+        for (const p of all) {
+          const key = `${p.type}|${(p.title||'').trim().toLowerCase()}|${Number(p.price)||0}|${(p.duration||'').trim().toLowerCase()}`;
+          if (seen.has(key)) {
+            toDelete.push(p.id);
+          } else {
+            seen.set(key, p.id);
+          }
+        }
+        if (toDelete.length) {
+          await Promise.all(toDelete.map(id => deleteDoc(doc(db, 'packages', id))));
+          await load();
+        }
+        localStorage.setItem('packages_deduped', '1');
+      } catch (_) {
+        // ignore
+      }
+    })();
+  }, []);
+
   const handleCreate = async () => {
     const title = prompt('Título del paquete:');
     if (!title) return;

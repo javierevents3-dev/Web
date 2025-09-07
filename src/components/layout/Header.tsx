@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import ContactBlock from './ContactBlock';
 import Logo from '../ui/Logo';
 import LanguageSelector from '../ui/LanguageSelector';
 import CartIcon from '../cart/CartIcon';
@@ -49,9 +48,6 @@ const Header = () => {
   const navLinks = [
     { name: t('nav.home'), path: '/' },
     { name: t('nav.portfolio'), path: '/portfolio' },
-    { name: t('nav.portraits'), path: '/portrait' },
-    { name: t('nav.maternity'), path: '/maternity' },
-    { name: t('nav.events'), path: '/events' },
     { name: t('nav.store'), path: '/store' },
     { name: t('nav.book'), action: handleBooking },
     { name: t('nav.contact'), path: '/contact' },
@@ -95,7 +91,6 @@ const Header = () => {
             ))}
           </ul>
           <div className="flex items-center space-x-6 text-white">
-            <ContactBlock iconOnly={true} dark={false} />
             <CartIcon />
             
             <LanguageSelector />
@@ -144,7 +139,6 @@ const Header = () => {
               
             </ul>
             <div className="mt-auto pb-10">
-              <ContactBlock iconOnly={false} dark={true} />
               <div className="mt-6 flex justify-center">
                 <LanguageSelector />
               </div>

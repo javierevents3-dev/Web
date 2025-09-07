@@ -211,6 +211,7 @@ const StorePage = () => {
               <button onClick={() => setAdminView('products')} className={`px-4 py-2 rounded-none border-2 ${adminView==='products' ? 'bg-black text-white border-black' : 'border-black text-black hover:bg-black hover:text-white'}`}>Productos</button>
               <button onClick={() => setAdminView('orders')} className={`px-4 py-2 rounded-none border-2 ${adminView==='orders' ? 'bg-black text-white border-black' : 'border-black text-black hover:bg-black hover:text-white'}`}>Órdenes</button>
               <button onClick={() => setAdminView('contracts')} className={`px-4 py-2 rounded-none border-2 ${adminView==='contracts' ? 'bg-black text-white border-black' : 'border-black text-black hover:bg-black hover:text-white'}`}>Contratos</button>
+              <button onClick={() => setAdminView('packages')} className={`px-4 py-2 rounded-none border-2 ${adminView==='packages' ? 'bg-black text-white border-black' : 'border-black text-black hover:bg-black hover:text-white'}`}>Paquetes</button>
               <div className="ml-auto">
                 <button onClick={() => setAdminFullscreen(v => !v)} className="px-4 py-2 rounded-none border-2 border-black text-black hover:bg-black hover:text-white">{adminFullscreen ? 'Restaurar' : 'Maximizar'}</button>
               </div>
@@ -224,7 +225,22 @@ const StorePage = () => {
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="section-title">Gestión de Productos</h2>
-                  <button onClick={() => { setEditingProduct(null); setEditorOpen(true); }} className="px-4 py-2 rounded-none border-2 border-black text-black hover:bg-black hover:text-white transition-colors">+ Agregar Producto</button>
+                  <div className="flex items-center gap-2">
+                    <button onClick={async () => {
+                      if (!confirm('Buscar y eliminar productos duplicados por nombre y precio?')) return;
+                      const seen = new Map<string, string>();
+                      for (const p of products) {
+                        const key = `${String(p.name||'').trim().toLowerCase()}|${Number(p.price)||0}`;
+                        if (seen.has(key)) {
+                          try { await deleteDoc(doc(db, 'products', p.id)); } catch {}
+                        } else {
+                          seen.set(key, p.id);
+                        }
+                      }
+                      fetchProducts();
+                    }} className="px-4 py-2 rounded-none border-2 border-black text-black hover:bg-black hover:text-white transition-colors">Eliminar Duplicados</button>
+                    <button onClick={() => { setEditingProduct(null); setEditorOpen(true); }} className="px-4 py-2 rounded-none border-2 border-black text-black hover:bg-black hover:text-white transition-colors">+ Agregar Producto</button>
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {products.map(product => (
@@ -268,6 +284,9 @@ const StorePage = () => {
             {adminView === 'contracts' && (
               <ContractsManagement />
             )}
+            {adminView === 'packages' && (
+              <PhotoPackagesManagement />
+            )}
           </div>
         )}
 
@@ -279,7 +298,8 @@ const StorePage = () => {
                 <button onClick={() => setAdminView('products')} className={`px-4 py-2 rounded-none border-2 ${adminView==='products' ? 'bg-black text-white border-black' : 'border-black text-black hover:bg-black hover:text-white'}`}>Productos</button>
                 <button onClick={() => setAdminView('orders')} className={`px-4 py-2 rounded-none border-2 ${adminView==='orders' ? 'bg-black text-white border-black' : 'border-black text-black hover:bg-black hover:text-white'}`}>Órdenes</button>
                 <button onClick={() => setAdminView('contracts')} className={`px-4 py-2 rounded-none border-2 ${adminView==='contracts' ? 'bg-black text-white border-black' : 'border-black text-black hover:bg-black hover:text-white'}`}>Contratos</button>
-                <div className="ml-auto">
+              <button onClick={() => setAdminView('packages')} className={`px-4 py-2 rounded-none border-2 ${adminView==='packages' ? 'bg-black text-white border-black' : 'border-black text-black hover:bg-black hover:text-white'}`}>Paquetes</button>
+              <div className="ml-auto">
                   <button onClick={() => setAdminFullscreen(false)} className="px-4 py-2 rounded-none border-2 border-black text-black hover:bg-black hover:text-white">Cerrar pantalla completa</button>
                 </div>
               </div>
@@ -287,9 +307,24 @@ const StorePage = () => {
               {adminView === 'products' && (
                 <div>
                   <div className="flex justify-between items-center mb-6">
-                    <h2 className="section-title">Gestión de Productos</h2>
+                  <h2 className="section-title">Gestión de Productos</h2>
+                  <div className="flex items-center gap-2">
+                    <button onClick={async () => {
+                      if (!confirm('Buscar y eliminar productos duplicados por nombre y precio?')) return;
+                      const seen = new Map<string, string>();
+                      for (const p of products) {
+                        const key = `${String(p.name||'').trim().toLowerCase()}|${Number(p.price)||0}`;
+                        if (seen.has(key)) {
+                          try { await deleteDoc(doc(db, 'products', p.id)); } catch {}
+                        } else {
+                          seen.set(key, p.id);
+                        }
+                      }
+                      fetchProducts();
+                    }} className="px-4 py-2 rounded-none border-2 border-black text-black hover:bg-black hover:text-white transition-colors">Eliminar Duplicados</button>
                     <button onClick={() => { setEditingProduct(null); setEditorOpen(true); }} className="px-4 py-2 rounded-none border-2 border-black text-black hover:bg-black hover:text-white transition-colors">+ Agregar Producto</button>
                   </div>
+                </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {products.map(product => (
                       <div key={product.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden h-full flex flex-col">
